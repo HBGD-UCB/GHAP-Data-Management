@@ -1,6 +1,23 @@
 
 
 
+#------------------------------------------------------
+# Author: Andrew Mertens
+# amertens@berkeley.edu
+#
+# Calculate household wealth score from the first
+# principal component of household asset ownership
+# indicators
+#-------------------------------------------------------
+
+
+
+select_groups <- function(data, groups, ...) {
+  data[sort(unlist(attr(data, "indices")[ groups ])) + 1, ]}
+
+
+
+
 loadGHAP<-function(study, varlist){
   
   d<-readRDS(paste0(study,".rds"))
@@ -11,94 +28,6 @@ loadGHAP<-function(study, varlist){
   d<-as.data.frame(d)
   return(d)
 }
-
-
-
-bindGHAP<-function(study, varlist=NULL, d=d){
-  
-  study.d<-readRDS(paste0(study,".rds"))
-  
-  if(!is.null(varlist)){
-    study.d<-study.d[,which(colnames(study.d) %in% varlist)]
-  }
-  study.d <- apply(study.d, 2, as.character)
-  study.d<-as.data.frame(study.d)
-  
-  study.d$AGEDAYS<-as.numeric(as.character(study.d$AGEDAYS))
-  study.d$HAZ<-as.numeric(as.character(study.d$HAZ))
-  
-  study.d <-study.d %>% group_by(SUBJID) %>% 
-    filter(!is.na(HAZ)) %>%
-    slice(which.min(abs(AGEDAYS - 548))) %>% #Find observation with age closest to 1.5 year old
-    filter(AGEDAYS > 90 & AGEDAYS < 1100) %>% #Select ages between 3 months and 3.5 years
-    ungroup
-  
-  
-  d<- bind_rows(d, study.d , .id = "studyid")
-  rm(study.d)
-  return(d)
-}
-
-
-bindGHAP_Fill<-function(study, varlist=NULL, d=d){
-  
-  study.d<-readRDS(paste0(study,".rds"))
-  
-  if(!is.null(varlist)){
-    study.d<-study.d[,which(colnames(study.d) %in% varlist)]
-  }
-  
-  study.d <- apply(study.d, 2, as.character)
-  study.d<-as.data.frame(study.d)
-  
-  #Set "" and other missing codes to missing
-  for(i in 1:ncol(study.d)){
-    study.d[,i]<-ifelse(study.d[,i]=="",NA,as.character(study.d[,i]))
-  } 
-  study.d<-study.d %>%  
-    group_by(SUBJID) %>%
-    do(fill(.,everything())) %>% 
-    do(fill(.,everything(), .direction = 'up')) 
-  
-  
-  
-  study.d$AGEDAYS<-as.numeric(as.character(study.d$AGEDAYS))
-  study.d$HAZ<-as.numeric(as.character(study.d$HAZ))
-  study.d$WHZ<-as.numeric(as.character(study.d$WHZ))
-  
-  study.d <-study.d %>% group_by(SUBJID) %>% 
-    filter(!is.na(HAZ)) %>%
-    slice(which.min(abs(AGEDAYS - 548))) %>% #Find observation with age closest to 1.5 year old
-    filter(AGEDAYS > 90 & AGEDAYS < 1100) %>% #Select ages between 3 months and 3.5 years
-    ungroup
-  
-  
-  d<- bind_rows(d, study.d , .id = "studyid")
-  rm(study.d)
-  return(d)
-}
-
-
-
-loadSingleGHAP<-function(study){
-  
-  study.d<-readRDS(paste0(study,".rds"))
-  #study.d <- apply(study.d, 2, as.character)
-  study.d<-as.data.frame(study.d)
-  
-  # study.d$AGEDAYS<-as.numeric(as.character(study.d$AGEDAYS))
-  # study.d$HAZ<-as.numeric(as.character(study.d$HAZ))
-  
-  study.d <-study.d %>% group_by(SUBJID) %>% 
-    filter(!is.na(HAZ)) %>%
-    slice(which.min(abs(AGEDAYS - 548))) %>% #Find observation with age closest to 1.5 year old
-    filter(AGEDAYS > 90 & AGEDAYS < 1100) %>% #Select ages between 3 months and 3.5 years
-    ungroup
-  
-  print(colnames(study.d))
-  return(study.d)
-}
-
 
 
 
@@ -371,40 +300,6 @@ tmle_risk<-function(dat=d,
                     adjusted=F){
   
   
-                                   # dat=dsub
-                                   # Y="stunt"
-                                   # W=colnames(dsub)[which(!(colnames(dsub) %in% c("STUDYID","COUNTRY","SUBJID","AGEDAYS","HAZ","stunt","sevstunt", Avar, paste0("miss_",Avar))))]
-                                   # n.cat=n.cat
-                                   # A=Avar
-                                   # Acuts=Acuts
-                                   # Alevels=Alevels
-                                   # reflevel=1
-                                   # family="binomial"
-                                   # SLlibrary="SL.glm"
-                                   # outputdf=NULL
-                                   # overall.dist=T
-                                   # sparseN=5
-                                   # adjusted=T
-
-        
-                                   
-  # 
-  # dat=as.data.frame(df[df$STUDYID=="ki1148112-iLiNS-DYAD-M",])
-  # W=Wvars
-  # A="PARITY"
-  # n.cat=4
-  # reflevel=1
-  # outputdf=NULL
-  # Y="wast"
-  # family="binomial"
-  # SLlibrary=lib
-  # adjusted=T
-  # sparseN=0
-  # 
-  # Acuts= c(1.1, 2.1, 3.1, 4.1)
-  # Alevels=c("Firstborn", "Secondborn","Thirdborn","4th+ born")
-  # 
-  
   #get study name
   study <-deparse(substitute(dat))
   
@@ -470,18 +365,6 @@ tmle_risk<-function(dat=d,
   
   #Extract desired levels
   levelmeans<-levelmeans[1:n.cat,]
-  
-  #drop studies with no variation
-  # if(adjusted==T){
-  # 
-  #   studyA <- dat %>% group_by(STUDYID) %>%
-  #     mutate(unique_types = n_distinct(BIRTHWT)) %>%
-  #     ungroup %>% subset(., select=unique_types)
-  # 
-  #   #NOTE! Need to finish dropping studies that didn't
-  #   #have the variable A
-  # }
-  
   
   
   res<-NULL
@@ -584,20 +467,6 @@ tmle_risk<-function(dat=d,
   rownames(res)<-NULL
   res<-res[,-1] #Drop study label for dplyr groupby code
   
-  # #Match RR with risk factor levels for PAF estimation
-  # if(family=="binomial"){
-  #   RF_est <- res %>% subset(., select=c(level, ATE, RR))
-  #   RF_est[1,2:3] <- c(0,1) #set reference to null
-  #   RF_est$var <- as.character(res$variable[1])
-  # }else{
-  #   RF_est <- res %>% subset(., select=c(level, ATE))
-  #   RF_est[1,2] <- 0 #set reference to null
-  #   RF_est$var <- as.character(res$variable[1])
-  # }
-  # PAFdat <- fulldat[,1:4] #Make an individual participant data frame to be returned for PAF analysis
-  # colnames(PAFdat)[2] <- "level"
-  # PAFdat <- left_join(PAFdat, RF_est, by="level") 
-  # 
   
   if(!is.null(outputdf)){
     return(rbind(outputdf,res))
@@ -610,8 +479,7 @@ tmle_risk<-function(dat=d,
 
 
 
-select_groups <- function(data, groups, ...) {
-  data[sort(unlist(attr(data, "indices")[ groups ])) + 1, ]}
+
 
 
 tmle_subgroup<-function(dat=d, 
@@ -626,23 +494,12 @@ tmle_subgroup<-function(dat=d,
                         SLlibrary=library, 
                         outputdf=res.df){
   
-  # dat=as.data.frame(d)
-  # W=c("SEX", "AGEDAYS")
-  # A=RiskFactor
-  # n.cat=n.cat
-  # Acuts=Acuts
-  # Alevels=Alevels
-  # outputdf=NULL
-  # Y="wast"
-  # family=family
-  # SLlibrary=lib
+  
   
   
   #get study name
   study <-deparse(substitute(dat))
   
-  # reference<-Alevels[reflevel]
-  # comparisons<-Alevels[-reflevel]
   
   #get number of studies 
   nstudies<-length(unique(dat$STUDYID))
@@ -650,11 +507,9 @@ tmle_subgroup<-function(dat=d,
   if(A %in% W){W<-W[-which(W %in% A)]}
   y<-subset(dat, select=Y)
   a<-subset(dat, select=A)
-  #a[,1]<-as.numeric(as.character(a[,1]))
   tr<-subset(dat, select=tr)
   studyid<-subset(dat, select="STUDYID")
   
-  #a[1:100,1]<-0
   summary(a[,1])
   table(findInterval(a[,1], Acuts))
   
@@ -674,10 +529,10 @@ tmle_subgroup<-function(dat=d,
   fulldat<-fulldat[complete.cases(fulldat),]
   
   #Extract mean Y|A
-  levelmeans<- fulldat %>% #fulldat[fulldat[,2]==levels(fulldat[,2])[1],] %>%
+  levelmeans<- fulldat %>%
     group_by(.[[2]]) %>%
     do(as.data.frame(washb_mean(Y=.[[1]], id=1:length(.[[1]]), print = F))) %>% 
-    as.data.frame %>% `rownames<-`(.[,1]) #%>% .[,-1]
+    as.data.frame %>% `rownames<-`(.[,1]) 
   
   #Extract desired levels
   levelmeans<-levelmeans[1:n.cat,]
@@ -739,14 +594,6 @@ tmle_subgroup<-function(dat=d,
   }
   
   
-  # if(family=="binomial"){
-  #   refrow<-data.frame(res[1,1],reference,t(rep(NA,17)))
-  # }else{
-  #   refrow<-data.frame(res[1,1],reference,t(rep(NA,7)))
-  # }
-  # colnames(refrow)<-colnames(res)
-  # res<-rbind(refrow,res)
-  
   res<-cbind(study,res,levelmeans)
   
   if(family=="binomial"){
@@ -777,13 +624,7 @@ tmle_subgroup_ATE<-function(dat=d,
                             SLlibrary=library, 
                             outputdf=res.df){
   
-  # dat=as.data.frame(d)
-  # W=Wvars
-  # outputdf=NULL
-  # Y="wast"
-  # family="binomial"
-  # SLlibrary=lib
-  # 
+
   
   #get study name
   study <-deparse(substitute(dat))
@@ -899,712 +740,60 @@ tmle_subgroup_ATE<-function(dat=d,
 
 
 
+#Pooled logistic functions for IRR:
 
-
-
-
-
-
-
-
-
-
-
-
-tmle_risk_adj<-function(variable="variable",
-                        study,
-                        Y,
-                        A,
-                        W, 
-                        commonW,
-                        n.cat=2, 
-                        Acuts=NULL, 
-                        Alevels=NULL, 
-                        reflevel=NULL, 
-                        family="gaussian", 
-                        SLlibrary=library,
-                        overall.dist=T
-){
-  
-  # i<-3
-  # variable="variable"
-  # study=names(studylist)[i]
-  # W=as.data.frame(W[[i]])
-  # A=as.data.frame(A[[i]])
-  # Y=as.data.frame(Y[[i]])
-  # n.cat=n.cat
-  # reflevel=reflevel
-  # Acuts=Acuts
-  # Alevels=Alevels
-  # outputdf=NULL
-  # family="binomial"
-  # SLlibrary=lib
-  
-  # Y<-subset(dat, select=c(Y))
-  # a<-subset(dat, select=c(A))
-  # 
-  # Y<-as.data.frame(Y[!is.na(a[,1]),1])
-  # W<-as.data.frame(W[!is.na(a[,1]),])
-  # a<-as.data.frame(a[!is.na(a[,1]),1])
-  
-  if(overall.dist==F){
-    Acuts<-as.numeric(summary(a[,1])[c(2,3,5)])
-    Alevels<-c(paste0("<=",round(Acuts[1],3)), paste0(round(Acuts[1],3),"-",round(Acuts[2],3)), paste0(round(Acuts[2],3),"-",round(Acuts[3],3)), paste0(">",round(Acuts[3],3)))
-  }
-  
-  Y<-as.data.frame(Y[!is.na(A[,1]),1])
-  W<-as.data.frame(W[!is.na(A[,1]),])
-  a<-as.data.frame(A[!is.na(A[,1]),1])
-  
-  
-  if(!is.null(Acuts)){
-    a[,1]<-findInterval(a[,1], Acuts)
-    a[,1]<-factor(a[,1])
-    if(!is.null(Alevels)){levels(a[,1])<-Alevels[as.numeric(levels(a[,1]))+1]}
-  }
-  
-  
-  
-  a[,1]<-as.factor(a[,1])
-  print(table(a[,1]))
-  
-  #if(is.null(Alevels)){
-  Alevels<-levels(a[,1])
-  #}
-  
-  
-  fulldat<-data.frame(Y,a,W)
-  #fulldat<-fulldat[complete.cases(fulldat),]
-  
-  #Extract mean Y|A
-  levelmeans<- fulldat %>% #fulldat[fulldat[,2]==levels(fulldat[,2])[1],] %>%
-    group_by(.[[2]]) %>%
-    do(as.data.frame(washb_mean(Y=.[[1]], id=1:length(.[[1]]), print = F))) %>% 
-    as.data.frame %>% `rownames<-`(.[,1]) %>% .[,-1]
-  
-  #Extract desired levels
-  levelmeans<-levelmeans[1:n.cat,]
-  
-  #set reference levels
-  if(is.null(reflevel)){reflevel<-1}
-  reference<-Alevels[reflevel]
-  
-  #Set comparison levels
-  complevels<-which(!(1:length(Alevels) %in% reflevel))
-  comparisons<-Alevels[complevels]
-  
-  res<-NULL
-  SLpreds<-list()
-  for(i in comparisons){
-    dat<-fulldat[fulldat[,2]==reference | fulldat[,2]==i,]
-    
-    print(table(dat[,2]))
-    
-    #Convert factor to binary indicator
-    dat[,2]<-ifelse(dat[,2]==reference,0,1)
-    
-    sparseY=F
-    if(family=="binomial"){
-      if(sum(dat[,1]==0)<6 | sum(dat[,1]==1)<6){
-        sparseY=T
-      }      
-    }
-    
-    
-    if(sum(dat[,2]==0)>5 & sum(dat[,2]==1)>5 & sparseY==F){ #Make sure there is enough support in the data
-      
-      fit<-study.adj.tmle(d=dat, 
-                          lib=SLlibrary,
-                          family=family)
-      SLpreds[[paste0("Q.",i)]]<-fit$Q
-      SLpreds[[paste0("g.",i)]]<-fit$g
-      SLpreds[[paste0("Y.",i)]]<-fit$Y
-      SLpreds[[paste0("A.",i)]]<-fit$A
-      SLpreds[[paste0("W.",i)]]<-fit$W
-      
-      #add in prevalence
-      #out<-c(out,mean(dat[,1], na.rm=T))
-      out<-as.data.frame(fit$tmleRES)
-      names(out)<-A
-      out<-t(out)
-    }else{
-      out<-data.frame(psi=NA, var.psi=NA, CI1=NA, CI2=NA, pvalue=NA)
-      rownames(out)<-A
-    }
-    
-    out<-data.frame(variable,reference,i,out, length(dat[dat[,2]==0,2]), length(dat[dat[,2]==1,2]))
-    rownames(out)<-NULL
-    colnames(out)<-c("variable","ref","comparison","ATE","var","CI1","CI2", "Pval", "refN", "compN")
-    res<-rbind(res,out)
-  }
-  
-  
-  refrow<-data.frame(res[1,1:2],t(rep(NA,8)))
-  colnames(refrow)<-colnames(res)
-  res<-rbind(refrow,res)
-  
-  res<-cbind(rep(study, nrow(res)),res,levelmeans[!is.na(levelmeans$N),])
-  colnames(res)<-c("study","variable","ref","comparison","ATE","var","CI1","CI2", "Pval", "compN", "refN", "meanN",
-                   "meanY", "mean.sd","mean.se","mean.CI1","mean.CI2")
-  #res<-res[,-1] #Drop study label for dplyr groupby code
-  
-  # if(!is.null(outputdf)){
-  #   return(rbind(outputdf,res))
-  # }else{
-  #NOTE how to just add res as element of the list?
-  SLpreds[["res"]]<-res
-  SLpreds[["commonW"]]<-commonW
-  return(SLpreds)
-  #}
-}
-
-
-
-
-
-
-
-study.adj.tmle<-function(d, 
-                         lib=lib,
-                         family=family){
-  
-  set.seed(12345)
-  d<-as.data.frame(d)
-  
-  
-  X=d[,-1]
-  suppressWarnings(Qsl<-SuperLearner(Y=d[,1],
-                                     X=X,
-                                     SL.library = lib,
-                                     family = family, 
-                                     cvControl = list(V=5)))
-  dY1<-dY0<-as.data.frame(X)
-  dY1[,1]<-1
-  dY0[,1]<-0
-  Q<-cbind(predict(Qsl, newdata = dY1)$pred,predict(Qsl, newdata = dY0)$pred)
-  head(Q)
-  
-  
-  gsl<-SuperLearner(Y=X[,1],
-                    X=X[,-1],
-                    SL.library = lib,
-                    family = family, 
-                    cvControl = list(V=5))
-  
-  g1W<-predict(gsl)$pred
-  
-  
-  
-  mixedCV.tmle.A<-tmle(Y=d[,1], 
-                       A=X[,1], 
-                       W=X[,-1], 
-                       Q=Q,
-                       g1W=g1W,
-                       family = family, 
-                       verbose = T)
-  
-  return(list(tmleRES=unlist(mixedCV.tmle.A$estimates$ATE),
-              Q=Q,
-              g=g1W,
-              Y=d[,1],
-              A=X[,1],
-              W=X[,-1]))
-}
-
-
-
-
-
-
-
-
-
-
-#---------------------------------------
+# --------------------------------------
+# Robust clustered SE function
+# http://people.su.se/~ma/mcluster.R
+# R (www.r-project.org) codes for computing multi-way clustered-standard errors
+# Mahmood Arai, Jan 21, 2008. 
+# See: Thompson (2006), Cameron, Gelbach and Miller (2006) and Petersen (2006).
 #
-# Asset PCA function
-#
-# The analysis script for the HBGDki
-# analysis - creation of iLins-Dyad-M 
-# wealth factor analysis 
-#---------------------------------------
-
-
-assetPCA<-function(dfull, varlist, reorder=F ){
+# slightly modified to have it return the vcovCL object
+# rather than the updated fit (since might need the VC matrix)
+# --------------------------------------
+cl   <- function(dat,fm, cluster){
+  # dat: data used to fit the model
+  # fm : model fit (object)
+  # cluster : vector of cluster IDs
+  require(sandwich, quietly = TRUE)
+  require(lmtest, quietly = TRUE)
+  M <- length(unique(cluster))
+  N <- length(cluster)
+  K <- fm$rank
+  dfc <- (M/(M-1))*((N-1)/(N-K))
   
-  varlist<-c("STUDYID","SUBJID","COUNTRY",varlist)
-  
-  #Subset to only needed variables for subgroup analysis
-  ret <- dfull %>%
-    subset(select=c(varlist))
-  
-  for(i in 1:ncol(ret)){
-    ret[,i]<-ifelse(ret[,i]=="",NA,ret[,i])
-  } 
-  
-  #drop rows with no asset data
-  ret<-ret[rowSums(is.na(ret[,4:ncol(ret)])) != ncol(ret)-3,]  
-  
-
-  #PCA of asset based wealth by enrollment
-  #Method based on: https://programming-r-pro-bro.blogspot.com/2011/10/principal-component-analysis-use.html
-  
-  #Select assets
-  ret<-as.data.frame(ret) 
-  id<-subset(ret, select=c("STUDYID","SUBJID","COUNTRY")) #drop subjectid
-  ret<-ret[,which(!(colnames(ret) %in% c("STUDYID","SUBJID","COUNTRY")))]
-  
-  #Drop assets with great missingness
-  for(i in 1:ncol(ret)){
-    cat(colnames(ret)[i],"\n")
-    print(table(is.na(ret[,i])))
-    print(class((ret[,i])))
-  }
-  
-  #Set missingness to zero
-  table(is.na(ret))
-  for(i in 1:ncol(ret)){
-    ret[,i]<-as.character(ret[,i])
-    ret[is.na(ret[,i]),i]<-"miss"
-    ret[,i]<-as.factor(ret[,i])
-    
-  }
-  table(is.na(ret))
-  
-  #Remove columns with almost no variance
-  if(length(nearZeroVar(ret))>0){
-    ret<-ret[,-nearZeroVar(ret)]
-  }
-  
-  #Convert factors into indicators
-  ret<-droplevels(ret)
-  ret<-design_matrix(ret)
-if(length(nearZeroVar(ret))>0){
-  ret<-ret[,-nearZeroVar(ret)]
+  uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
+  vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
+  return(vcovCL)
 }
 
+# --------------------------------------
+# function to estimate poisson models
+# with robust SEs
+# --------------------------------------
+poissonRB <- function(fmla,dat,print=TRUE) {
+  # poisson regression with robust SEs
+  # fmla : formula for the model fit
+  # dat  : data used to fit the model (has to include "SUBJID" for individuals)
+  # print: print results ?
   
-  #Set missingness to zero
-  table(is.na(ret))
-  ret[is.na(ret)]<-0
-  table(is.na(ret))
+  # restrict to complete cases
+  dat <- dat[complete.cases(dat[,c(all.vars(paste0(fmla)))]),] 
   
-  #Remove columns with almost no variance
-  if(length(nearZeroVar(ret))>0){
-    ret<-ret[,-nearZeroVar(ret)]
+  fit <- glm(fmla,family=poisson,data=dat,model=FALSE,x=TRUE)
+  
+  dat <- na.omit(dat[ , c("SUBJID", all.vars(formula(fit)))])
+  vcovCL <- cl(dat=dat,fm=fit,cluster=dat$SUBJID)
+  rfit <- coeftest(fit, vcovCL)
+  if(print==TRUE) {
+    cat(paste("N obs=",nrow(dat)))
+    print(rfit)
   }
-  
-  ## Convert the data into matrix ##
-  ret<-as.matrix(ret)
-  
-  
-  ##Computing the principal component using eigenvalue decomposition ##
-  princ.return <- princomp(ret) 
-  
-  
-  ## To get the first principal component in a variable ##
-  load <- loadings(princ.return)[,1]   
-  
-  pr.cp <- ret %*% load  ## Matrix multiplication of the input data with the loading for the 1st PC gives us the 1st PC in matrix form. 
-  
-  HHwealth <- as.numeric(pr.cp) ## Gives us the 1st PC in numeric form in pr.
-  
-  #Create 4-level household weath index
-  quartiles<-quantile(HHwealth, probs=seq(0, 1, 0.25))
-  print(quartiles)
-  ret<-as.data.frame(ret)
-  ret$HHwealth_quart<-rep(1, nrow(ret))
-  ret$HHwealth_quart[HHwealth>=quartiles[2]]<-2
-  ret$HHwealth_quart[HHwealth>=quartiles[3]]<-3
-  ret$HHwealth_quart[HHwealth>=quartiles[4]]<-4
-  table(ret$HHwealth_quart)
-  ret$HHwealth_quart<-factor(ret$HHwealth_quart)
-  
-  if(reorder==T){
-    levels(ret$HHwealth_quart)<-c("Wealth Q4","Wealth Q3","Wealth Q2","Wealth Q1")
-    ret$HHwealth_quart<-factor(ret$HHwealth_quart, levels=c("Wealth Q1", "Wealth Q2","Wealth Q3","Wealth Q4"))
-  }else{
-    levels(ret$HHwealth_quart)<-c("Wealth Q1", "Wealth Q2","Wealth Q3","Wealth Q4")
-  }
-  
-  #Table assets by pca quartile to identify wealth/poverty levels
-  d<-data.frame(id, ret)
-  wealth.tab <- d %>% subset(., select=-c(STUDYID, SUBJID, COUNTRY)) %>%
-    group_by(HHwealth_quart) %>%
-    summarise_all(funs(mean)) %>% as.data.frame()
-  print(wealth.tab)
-  
-  #Save just the wealth data
-  pca.wealth<-d %>% subset(select=c(STUDYID, SUBJID, COUNTRY, HHwealth_quart))
-  
-  pca.wealth$SUBJID<-as.numeric(as.character(pca.wealth$SUBJID))
-  
-  d <-dfull %>% subset(., select=c("STUDYID","SUBJID","COUNTRY"))
-  d$SUBJID<-as.numeric(as.character(d$SUBJID))
-  d<-left_join(d, pca.wealth, by=c("STUDYID","SUBJID","COUNTRY"))
-  return(d)
+  list(fit=fit,rfit=rfit,vcovCL=vcovCL)
 }
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rmvn <- function(n, mu, sig) { ## MVN random deviates
-  L <- mroot(sig)
-  m <- ncol(L)
-  t(mu + L %*% matrix(rnorm(m*n), m, n))
-}
-
-
-
-GAM_simulCI<-function (Y, Age, W = NULL, id = NULL, SL.library = c( "SL.gam"), cvControl = list(V=5), 
-                       gamdf = NULL, imputeX=F){
-  
-  require(SuperLearner)
-  if(is.null(id)) 
-    id <- 1:length(Y)
-  if(is.null(W)){
-    nullW <- TRUE
-    fulld <- data.frame(id, Y, Age)
-  }else{
-    nullW <- FALSE
-    Wdesign <- design_matrix(W)
-    fulld <- data.frame(id, Y, Age, Wdesign)
-  }
-  if(imputeX==T){
-    As <- seq(0, max(fulld$Age), by=0.1)
-  }else{
-    As <- unique(fulld$Age)
-  }
-  pY <- rep(NA, length(As))
-  fitd <- fulld[complete.cases(fulld), ]
-  n.orig <- dim(fulld)[1]
-  n.fit <- dim(fitd)[1]
-  
-  #test of transformation
-  #fitd$Y<-log(fitd$Y+0.1)
-  # fitd$Y<-ifelse(fitd$Y==0,0.0001,0.9999)
-  # fitd$Y<-qlogis(fitd$Y)
-  
-  
-  if (n.orig > n.fit) 
-    warning(paste("\n\n", n.orig - n.fit, "observations were dropped due to missing values\n in the outcome, age, or adjustement covariates. \n The original dataset contained", 
-                  n.orig, "observations,\n but GAM_simulCI is fitting the curve using", 
-                  n.fit, "observations."))
-  X <- subset(fitd, select = -c(1:2))
-  if (length(grep("SL.gam", SL.library)) > 0) {
-    set.seed(123456)
-    cvGAM <- ab_cvGAM(Y = fitd$Y, X = X, id = fitd$id, SL.library = SL.library, 
-                      cvControl = cvControl, df = gamdf)
-    SL.library <- cvGAM$SL.library
-  }
-  # SLfit <- SuperLearner::SuperLearner(Y = fitd$Y, X = X, id = fitd$id, 
-  #     cvControl = cvControl, SL.library = SL.library, family = "gaussian", 
-  #     method = "method.NNLS")
-  # p_res <- cbind(SLfit$cvRisk, SLfit$coef)
-  # colnames(p_res) <- c("CV-Risk", "Coef")
-  # cat("\nSummary of SuperLearner cross validated risk and \nweights for algorithms included in the library:\n\n")
-  # print(p_res)
-  # 
-  try(detach(package:gam))
-  require(mgcv)
-  #m <- gam(Y ~ s(Age, k = cvGAM$df_opt), data = fitd, family="binomial",  method = "REML")
-  m <- gam(Y ~ s(Age, k = cvGAM$df_opt), data = fitd,  method = "REML")
-  pval<- unlist(summary(m))$s.pv
-  #     for (i in 1:length(As)) {
-  #         X$Age <- As[i]
-  #         pYs <- predict(SLfit, newdata = X)$pred
-  #         pY[i] <- mean(pYs)
-  #     }
-  #     res <- merge(fitd, data.frame(Age = As, pY = pY), by = "Age", 
-  #         all.x = T, all.y = T)
-  # 
-  # res <- res[order(res$Age), ]
-  # list(pY = res$pY, Age = res$Age, Y = res$Y, W = subset(fitd, 
-  #     select = -c(1:3)), id = res$id, fit = SLfit)
-  
-  
-  Vb <- vcov(m)
-  newd <- seq(min(Age), max(Age), length = nrow(fitd))
-  pred <- predict(m, data.frame(Age = newd),  se.fit = TRUE)
-  se.fit <- pred$se.fit
-  
-  
-  set.seed(123456)
-  N <- 10000
-  
-  BUdiff <- rmvn(N, mu = rep(0, nrow(Vb)), sig = Vb)
-  Cg <- predict(m, data.frame(Age = newd), type = "lpmatrix")
-  simDev <- Cg %*% t(BUdiff)
-  
-  
-  absDev <- abs(sweep(simDev, 1, se.fit, FUN = "/"))
-  
-  
-  masd <- apply(absDev, 2L, max)
-  crit <- quantile(masd, prob = 0.95, type = 8)
-  pred <- transform(cbind(data.frame(pred), newd),
-                    uprP = fit + (2 * se.fit),
-                    lwrP = fit - (2 * se.fit),
-                    uprS = fit + (crit * se.fit),
-                    lwrS = fit - (crit * se.fit))  
-  
-  pred<-data.frame(Y=fitd$Y, X=fitd$Age, pred, Pval=rep(pval, nrow(fitd)))  
-  
-  # pred$Y<-round(exp(pred$Y)-.1,3)
-  # pred$fit<-round(exp(pred$fit)-.1,3)
-  # pred$uprS<-round(exp(pred$uprS)-.1,3)
-  # pred$lwrS<-round(exp(pred$lwrS)-.1,3)
-  
-  # pred$Y<-plogis(pred$Y)
-  # pred$fit<-plogis(pred$fit)
-  # pred$uprS<-plogis(pred$uprS)
-  # pred$lwrS<-plogis(pred$lwrS)
-  return(pred)    
-}
-
-
-
-
-
-
-
-
-
-
-ab_cvGAM<-function (Y, X, id = NULL, family = gaussian(), SL.library, cvControl = list(), 
-                    print = FALSE, df = 2:10) 
-{
-  if (is.null(df)) {
-    df <- 2:10
-  }
-  if (print == TRUE) {
-    cat("\nThe ensemble library includes SL.gam.")
-    cat("\nThe default R implementation of gam() may over- or under-smooth the data")
-    cat("\nTuning the fit by selecting the optimal df for the smoothing splines")
-    cat("\nfrom ", df[1], " to ", df[length(df)], " using V-fold cross-validation.")
-  }
-  require(SuperLearner)
-  if (is.null(id)) 
-    id <- 1:length(Y)
-  create.SL.gam <- function(tune = list(df = df)) {
-    for (mm in seq(length(tune$df))) {
-      eval(parse(file = "", text = paste("SL.gam.df", tune$df[mm], 
-                                         "<- function(...,deg.gam = ", tune$df[mm], ") SL.gam(..., deg.gam = deg.gam)", 
-                                         sep = "")), envir = .GlobalEnv)
-    }
-    invisible(TRUE)
-  }
-  create.SL.gam()
-  cvRisks <- rep(NA, length(df))
-  for (nn in seq(length(df))) {
-    fit <- SuperLearner(Y = Y, X = X, id = id, family = family, 
-                        SL.library = paste("SL.gam.df", df[nn], sep = ""), 
-                        cvControl = cvControl)
-    cvRisks[nn] <- fit$cvRisk
-  }
-  df_opt <- df[order(cvRisks)][1]
-  cvr_tab <- cbind(df, cvRisks)
-  colnames(cvr_tab) <- c("df", "CVRisk")
-  SLlib2 <- gsub("SL.gam", paste("SL.gam.df", df_opt, sep = ""), 
-                 SL.library)
-  if (print == TRUE) {
-    cat("\n-----------------------------------")
-    cat("\nGeneralized additive model with natural splines\n")
-    cat("\nOptimal smoothing df: ", df_opt, "\n")
-    print(cvr_tab)
-    cat("-----------------------------------\n")
-  }
-  return(list(SL.library = SLlib2, df_opt = df_opt, cvRisks = cvr_tab))
-}
-
-
-
-
-
-
-
-
-
-
-
-prepW2 <- function(study, Wvars, cont.vars=c("AGEDAYS")){
-  require(caret)
-  require(RANN)
-  
-  
-  
-  d<-as.data.frame(study)
-  
-  W<-subset(d, select=Wvars)
-  table(is.na(W))
-  for( i in 1:ncol(W)){
-    cat(i, " ",colnames(W)[i],": ", class(W[,i]),"\n")
-  }
-  
-  W <- apply(W, 2, as.character)
-  W[W=="" | W=="." | W=="NA" | is.na(W)]<-"Missing"
-  
-  
-  #Split out continious and factor variables
-  cont.vars.index<-which(colnames(W) %in% cont.vars)
-  contW<-W[,cont.vars.index]
-  
-  if(!is.null(ncol(contW))){
-    suppressWarnings(contW <- apply(contW, 2, as.numeric))
-  }else{
-    suppressWarnings(contW<-as.numeric(contW))
-  }
-  
-  factW<-W[,-cont.vars.index]
-  factW <- apply(factW, 2, as.factor)
-  
-  table(is.na(factW))
-  
-  
-  
-  
-  #Impute missing continious data
-  #Add back in factor data for imputation
-  data<-data.frame(contW, factW)
-  table(is.na(data))
-  for( i in 1:ncol(data)){
-    cat(i, " ",colnames(data)[i],": ", class(data[,i]),"\n")
-  }
-  
-  
-  #Then median impute continious variables
-  for(i in 1:length(cont.vars)){
-    preProcValues <- preProcess(data, method = c("medianImpute"))
-    data <- predict(preProcValues, data)
-  }
-  table(is.na(data))
-  
-  
-  #Convert factors to indicators
-  W<-design_matrix(data)
-  
-  #Remove near zero variance columns
-  dim(W)
-  preproc = caret::preProcess(W, method = c("zv", "nzv"))
-  W = predict(preproc, W)
-  rm(preproc)
-  dim(W)
-  
-  #Drop empty factor levels
-  W<-droplevels(W)
-  
-  return(W)
-}
-
-
-
-
-
-
-
-
-
-
-hbgdki_prescreen <- function (Y, Ws, ncases, family = "binomial", pval = 0.2,  print = TRUE){
-  
-   n<-nrow(Ws)
-   if(n-ncases < ncases){ncases<-n-ncases}  
-  
-    require(lmtest)
-    if(family[[1]]=="neg.binom"){
-       require(MASS)
-    }
-    if(pval > 0.99 | pval < 0){
-        stop("P-value threshold not set between 0 and 1.")
-    }
-    Ws <- as.data.frame(Ws)
-    dat <- data.frame(Ws, Y)
-    dat <- dat[complete.cases(dat), ]
-    nW <- ncol(Ws)
-    LRp <- matrix(rep(NA, nW), nrow = nW, ncol = 1)
-    rownames(LRp) <- names(Ws)
-    colnames(LRp) <- "P-value"
-    if(family[[1]] != "neg.binom"){
-        for(i in 1:nW) {
-            dat$W <- dat[, i]
-            if(class(dat$W) == "factor" & dim(table(dat$W)) == 
-                1) {
-                fit1 <- fit0 <- glm(Y ~ 1, data = dat, family = family)
-            }
-            else{
-                fit1 <- glm(Y ~ W, data = dat, family = family)
-                fit0 <- glm(Y ~ 1, data = dat, family = family)
-            }
-            LRp[i] <- lrtest(fit1, fit0)[2, 5]
-        }
-    }
-    else{
-        if(!requireNamespace("MASS", quietly = TRUE)){
-            stop("Pkg needed forthis function to work. Please install it.", 
-                call. = FALSE)
-        }
-        else{
-            for(i in 1:nW){
-                dat$W <- dat[, i]
-                if(class(dat$W) == "factor" & dim(table(dat$W)) == 
-                  1) {
-                  fit1 <- fit0 <- glm(Y ~ 1, data = dat, family = family)
-                }
-                else{
-                  fit1 <- glm.nb(Y ~ W, data = dat, family = family)
-                  fit0 <- glm.nb(Y ~ 1, data = dat, family = family)
-                }
-                LRp[i] <- lrtest(fit1, fit0)[2, 5]
-            }
-        }
-    }
-    p20 <- ifelse(LRp < pval, 1, 0)
-    if(print == TRUE) {
-        cat("\nLikelihood Ratio Test P-values:\n")
-        print(round(LRp, 5))
-        if(sum(p20) > 0) {
-            LRps <- matrix(LRp[p20 == 1, ], ncol = 1)
-            rownames(LRps) <- names(Ws)[p20 == 1]
-            colnames(LRps) <- "P-value"
-            cat(paste("\n\nCovariates selected (P<", pval, "):\n", 
-                sep = ""))
-            print(LRps)
-        }
-        else{
-            cat(paste("\nNo covariates were associated with the outcome at P<", 
-                pval))
-        }
-    }
-    
-    W <- data.frame(wvar=names(Ws), p=as.numeric(LRp), pthres=as.numeric(p20))
-    if(floor(ncases/10) > 0){
-    W <- W %>% arrange(p) %>% slice(1:floor(ncases/10))
-    }else{
-      W$pthres = 0
-      cat("\nNot enough cases for adjusted analysis")
-    }
-    return(as.character(W$wvar[W$pthres == 1]))
-}

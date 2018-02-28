@@ -1,4 +1,18 @@
 
+
+
+
+#------------------------------------------------------
+# Author: Andrew Mertens
+# amertens@berkeley.edu
+#
+# Script to download/load all datasets from GHAP onto
+# the perminent directory of a GHAP usser
+#
+#-----------------------------------------------------
+
+
+
 #devtools::install_github("HBGDki/ghap")
 
 library(ghap)

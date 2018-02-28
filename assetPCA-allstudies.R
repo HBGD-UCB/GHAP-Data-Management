@@ -1,4 +1,18 @@
 
+
+#------------------------------------------------------
+# Author: Andrew Mertens
+# amertens@berkeley.edu
+#
+# Calculate household wealth score from the first
+# principal component of household asset ownership
+# indicators
+#-----------------------------------------------------
+
+
+
+
+
 #------------------------------------
 # Household asset PCA
 #------------------------------------
