@@ -14,7 +14,8 @@ astudies<-as.data.frame(astudies)
 
 head(astudies)
 
-
+d <- use_study("mlex")
+head(d)
 
 
 

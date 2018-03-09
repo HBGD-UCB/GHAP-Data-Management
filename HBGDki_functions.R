@@ -371,20 +371,20 @@ tmle_risk<-function(dat=d,
                     adjusted=F){
   
   
-                                   # dat=dsub
-                                   # Y="stunt"
-                                   # W=colnames(dsub)[which(!(colnames(dsub) %in% c("STUDYID","COUNTRY","SUBJID","AGEDAYS","HAZ","stunt","sevstunt", Avar, paste0("miss_",Avar))))]
-                                   # n.cat=n.cat
-                                   # A=Avar
-                                   # Acuts=Acuts
-                                   # Alevels=Alevels
-                                   # reflevel=1
-                                   # family="binomial"
-                                   # SLlibrary="SL.glm"
-                                   # outputdf=NULL
-                                   # overall.dist=T
-                                   # sparseN=5
-                                   # adjusted=T
+                                   dat=dsub
+                                   Y="stunt"
+                                   W=colnames(dsub)[which(!(colnames(dsub) %in% c("STUDYID","COUNTRY","SUBJID","AGEDAYS","HAZ","stunt","sevstunt", Avar, paste0("miss_",Avar))))]
+                                   n.cat=n.cat
+                                   A=Avar
+                                   Acuts=Acuts
+                                   Alevels=Alevels
+                                   reflevel=1
+                                   family="binomial"
+                                   SLlibrary="SL.glm"
+                                   outputdf=NULL
+                                   overall.dist=T
+                                   sparseN=5
+                                   adjusted=T
 
         
                                    
@@ -471,30 +471,43 @@ tmle_risk<-function(dat=d,
   #Extract desired levels
   levelmeans<-levelmeans[1:n.cat,]
   
-  #drop studies with no variation
-  # if(adjusted==T){
-  # 
-  #   studyA <- dat %>% group_by(STUDYID) %>%
-  #     mutate(unique_types = n_distinct(BIRTHWT)) %>%
-  #     ungroup %>% subset(., select=unique_types)
-  # 
-  #   #NOTE! Need to finish dropping studies that didn't
-  #   #have the variable A
-  # }
+#Code for TMLE3
   
+  #NOTE: Make sure I'm feeding in a factor, not numeric A, for the multinomial
+  
+  # nodes <- list(W=colnames(w),
+  #               A=A,
+  #               Y=Y)
+  # 
+  # lrnr_glm_fast <- make_learner(Lrnr_glm_fast)
+  # lrnr_mean <- make_learner(Lrnr_mean)
+  # learner_list <- list(Y=lrnr_mean, A=lrnr_glm_fast)
+  # 
+  # d<- data.table(fulldat)
+  # tmle_fit_from_spec <- tmle3(tmle_TSM_all(),d, nodes, learner_list)
+  # print(tmle_fit_from_spec)
+  # 
+  # tmle_fit_from_spec$summary
+  # tmle_fit_from_spec$delta_summary
+  # 
+  # 
+  #   
+  # tmle_fit_PAF <- tmle3(tmle_PAR(baseline_level = 0),d, nodes, learner_list)
+  # print(tmle_fit_PAF)
+  # tmle_fit_PAF$delta_summary
   
   
   res<-NULL
   for(i in comparisons){
-    
+
     dat<-fulldat[fulldat[,2]==reference | fulldat[,2]==i,]
     # print(table(dat[,2], dat[,1]))
-    
+
     print(table(dat[,2]))
-    
+
     #Convert factor to binary indicator
     dat[,2]<-ifelse(dat[,2]==reference,0,1)
-    
+
     table(dat[,1],dat[,2])
     if(family=="binomial"){print(c(table(dat[,1],dat[,2])))}
     sparse=F
@@ -504,20 +517,20 @@ tmle_risk<-function(dat=d,
         sparse=T
       }
     }
-    
-    
-    
+
+
+
     if(sum(dat[,2]==0)>sparseN & sum(dat[,2]==1)>sparseN & sparse==F){ #Make sure there is enough support in the data
       w<-as.data.frame(dat[,5:ncol(dat)])
       if(ncol(w)==1){colnames(w)<-colnames(dat)[5]<-"colW"}
-      
+
       if(adjusted==T){
         if(family=="binomial"){
           Wscreen <- hbgdki_prescreen(Y=dat[,1], Ws=droplevels(w), ncases=sum(dat[,1]))
           }else{
             Wscreen <- washb_prescreen(Y=dat[,1], Ws=droplevels(w))
             }
-        if(length(Wscreen)>0){ 
+        if(length(Wscreen)>0){
         w<-subset(w, select=Wscreen)
         }else{
           dat$w1<-rep(1, nrow(dat))
@@ -528,33 +541,33 @@ tmle_risk<-function(dat=d,
         dat$w2 <- w$w2 <- rep(1, nrow(dat))
         }
       }
-      
-      fit<-studyCV.tmle(d=dat, 
+
+      fit<-studyCV.tmle(d=dat,
                         Y=Y,
-                        Avar=A, 
+                        Avar=A,
                         nstudies=nstudies,
                         lib=SLlibrary,
                         family=family,
                         Wvars=colnames(w),
                         CVstudies=ifelse(nstudies==1,F,T))
-      
+
       out<-as.data.frame(fit)
       names(out)<-i
       out<-t(out)
       out<-data.frame(A,i,out,reference,compN=sum(dat[,2]==0), refN=sum(dat[,2]==1))
-      
+
       if(family=="binomial"){
         out<-data.frame(out,t(c(table(dat[,1],dat[,2]))))
         colnames(out)<-c("variable","level","psi","var.psi","CI1","CI2","pvalue","RR", "RRCI1", "RRCI2","RRpvalue","log.RR","var.log.RR", "reference", "compN", "refN","d","c","b","a")
       }else{
         colnames(out)<-c("variable","level","psi","var.psi","CI1","CI2","pvalue", "reference", "compN", "refN")
       }
-      
-      
+
+
     }else{
       if(family=="binomial"){
         out<-data.frame(variable=A,level=i,psi=NA, var.psi=NA, CI1=NA, CI2=NA, pvalue=NA, RR=NA,  RRCI1=NA, RRCI2=NA, RRpvalue=NA, log.RR=NA, var.log.RR=NA, reference=reference, compN=sum(dat[,2]==0), refN=sum(dat[,2]==1), d=tab[1], c=tab[2], b=tab[3], a=tab[4])
-        
+
       }else{
         out<-data.frame(variable=A,level=i,psi=NA, var.psi=NA, CI1=NA, CI2=NA, pvalue=NA, reference=reference, compN=sum(dat[,2]==0), refN=sum(dat[,2]==1))
       }
@@ -562,7 +575,7 @@ tmle_risk<-function(dat=d,
     }
     res<-rbind(res,out)
   }
-  
+
   
   if(family=="binomial"){
     refrow<-data.frame(res[1,1],reference,t(rep(NA,11)),reference,t(rep(NA,6)))
