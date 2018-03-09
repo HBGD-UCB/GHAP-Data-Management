@@ -26,13 +26,10 @@ zmrt_inc<-WastIncCalc(d)
 zmrt_inc_table <- WastIncTable(zmrt_inc)
 save(zmrt_inc, zmrt_inc_table, file="WastIncDatasets/zmrt_inc.Rdata")
 
-
-
 d<-readRDS("cntt.rds")
 cntt_inc<-WastIncCalc(d)
 cntt_inc_table <- WastIncTable(cntt_inc)
 save(cntt_inc, cntt_inc_table, file="WastIncDatasets/cntt_inc.Rdata")
-
 
 d<-readRDS("gbsc.rds")
 gbsc_inc<-WastIncCalc(d)

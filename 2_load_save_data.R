@@ -1,5 +1,17 @@
 
 
+#------------------------------------------------------
+# Author: Andrew Mertens
+# amertens@berkeley.edu
+#
+# Script to download/load select datasets into R using
+# the ghap() package, save as  rds file, and fill in
+# time-static covariates across all observations of
+# each child.
+# (already done for some studies, not others)
+#
+#-----------------------------------------------------
+
 
 
 

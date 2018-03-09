@@ -1,14 +1,18 @@
 
 
-#rm(list=ls())
-#library(dplyr)
-#library(tidyr)
-#library(SuperLearner)
-#library(caret)
+#------------------------------------------------------
+# Author: Andrew Mertens
+# amertens@berkeley.edu
+#
+# Script of funcions to compile GHAP studies, and extract
+# relevant information (example, prevalence at an age,
+# incidence for an age range), and impute missing covariate
+# information
+#
+#-----------------------------------------------------
 
 
-#setwd("U:/results/Stunting")
-#load("st_GHAPstudies_raw.Rdata")
+
 
 
 #-------------------------------------------------------------------
@@ -54,6 +58,9 @@ missingness_indicators<-function (data, prefix = "miss_", remove_constant = T, r
   }
   return(indicators)
 }
+
+
+
 
 impute_missing_values<-function(data, type = "standard", add_indicators = T, prefix = "miss_", skip_vars = c(), verbose = F){
   missing_indicators = NULL
@@ -116,6 +123,9 @@ impute_missing_values<-function(data, type = "standard", add_indicators = T, pre
 
 
 
+
+
+
 impute_missing_hbgdki <- function(d,  outcomes = c("stunt", "sevstunt", "HTCM", "LENCM",
                                                    "WHZ", "HAZ",  "wast","sevwast","period_length","sevwast_inc",
                                                    "wast_inc","sevwast_rec","wast_rec","wast_risk",
@@ -124,8 +134,7 @@ impute_missing_hbgdki <- function(d,  outcomes = c("stunt", "sevstunt", "HTCM", 
                                                    "duration","wasting_duration","born_sevwast_inc","sevwasting_episode",
                                                    "sev_episode_ID","sevwasting_duration", "wast_rec90d","wast_rec60d",
                                                    "wast_rec30d","sevwast_inc90d","sevwast_inc60d","sevwast_inc30d")){
-  #require(ck37r)
-  
+
   outcome.df <- d[,which(colnames(d) %in% c("STUDYID", "SUBJID", outcomes))]
   d <- d[,which(!(colnames(d) %in% outcomes))]
   
@@ -431,6 +440,7 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
           "DIARRHOEA","DIARRHOEA_NEONATAL")
   
   
+  #time variables variables to skip missing imputation
   dynvars<-c(
     "AGEDAYS",
     "WTKG","WAZ",
