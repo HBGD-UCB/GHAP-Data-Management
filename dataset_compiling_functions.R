@@ -313,7 +313,8 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
                                 filename, long.data=F,
                                 rds=T, noBW=F,
                                 suffix="_inc",
-                                filesuffix=NULL){
+                                filesuffix=NULL,
+                                dont_clean=F){
   
   vars<-c("STUDYID","SUBJID",
           "LATITUDE",
@@ -468,30 +469,13 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
             "SEX","AGEDAYS","COUNTRY",
             "WAZ",
             "HAZ",
-            "BMI","WHZ","ARM",
-            "SUMEP","SUMDIAR",
-            "SUMDAYS","PCTDIAR",
-            "VISITNUM","VISIT",
-            "DEAD","DURBRST",
-            "COUGHFL","CHCIRCM",
-            "VISITDY",
-            "ANTPTNUM",
-            "FREECHL", "IMPRLAT",
-            "WATSOAP", "LNSN",    "LNSP",    "FCSAFDIS",
-            #additional diarrhea vars
-            "DIARFL","SUMDIAR",  
-            "DIARDAYS", "CSUMDIAR",
-            "DIAREPS" , "DIARBFEN" ,
-            "DIARRHOEA","DIARRHOEA_NEONATAL",
-            "DIARFL",
-            "FEVERFL",
-            "BFEDFL",
-            "EXBFEDFL",
-            "AGEDTH",
-            "DEAD","VOMFL","APTFL"
-    )
+            "BMI","WHZ","ARM")
     
-    dynvars<-c("")
+    dynvars<-c(
+      "AGEDAYS",
+      "WAZ",
+      "HAZ",
+      "BMI","WHZ")
   }
   
   
@@ -525,7 +509,6 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
   d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="india") 
   d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="nepal") 
   d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="peru") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="pakistan") 
   d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="southafrica") 
   d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="tanzania") 
   d<-bindGHAP(study="nbrt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
@@ -544,9 +527,11 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
   d<-bindGHAP(study="wsk", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="ilnd", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="ildm", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
-
+  d<-bindGHAP(study="vita", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  d<-bindGHAP(study="vb12", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  
   # #clean covariates and impute missingness
-  if(long.data==F){
+  if(long.data==F | dont_clean==T){
     d <- clean_covariates_hbgdki(d)
     d <- impute_missing_hbgdki(d)
   }
@@ -874,6 +859,11 @@ clean_covariates_hbgdki <- function(d){
   d$NCOMP <- as.numeric(d$NCOMP)
   table(d$NCOMP)
   
+  d$NPERSON <- as.numeric(d$NPERSON)
+  table(d$NPERSON)
+  
+  d$NCOMP[is.na(d$NCOMP)] <- d$NPERSON[is.na(d$NCOMP)]
+  
   quantile(d$NCOMP, na.rm=T)
   d$ncomp<-NA
   d$ncomp[d$NCOMP<6] <- "5 or less"
@@ -893,7 +883,7 @@ clean_covariates_hbgdki <- function(d){
   d$nchild5<-NA
   d$nchild5[d$NCHLDLT5==0] <- "0"
   d$nchild5[d$NCHLDLT5==1] <- "1"
-  d$nchild5[d$NCHLDLT5>2] <- "2+"
+  d$nchild5[d$NCHLDLT5>=2] <- "2+"
   d$nchild5 <- as.factor(d$nchild5)
   table(d$nchild5)
   
@@ -1271,7 +1261,7 @@ clean_covariates_hbgdki <- function(d){
            | d$COUNTRY=="KENYA" | d$COUNTRY=="MALAWI" | d$COUNTRY=="MALI" | d$COUNTRY=="MOZAMBIQUE"
            | d$COUNTRY=="SOUTH AFRICA" | d$COUNTRY=="TANZANIA, UNITED REPUBLIC OF" | d$COUNTRY=="ZIMBABWE"]<-"SSA"
   d$region[d$COUNTRY=="BANGLADESH" | d$COUNTRY=="INDIA" | d$COUNTRY=="NEPAL" | d$COUNTRY=="PAKISTAN" ]<-"south Asia"
-  d$region[d$COUNTRY=="CHINA" | d$COUNTRY=="PHILIPPINES" | d$COUNTRY=="NEPAL" | d$COUNTRY=="PAKISTAN" ]<-"east Asia"
+  d$region[d$COUNTRY=="CHINA" | d$COUNTRY=="PHILIPPINES"]<-"east Asia"
   d$region[d$COUNTRY=="BRAZIL" | d$COUNTRY=="ECUADOR" | d$COUNTRY=="GUATEMALA" | d$COUNTRY=="PERU" ]<-"Latin America"
   d$region[d$COUNTRY=="BELARUS"]<-"Europe"
   table(d$region)
