@@ -4,8 +4,8 @@ rm(list=ls())
 library(caret)
 library(tidyverse)
 
-source("U:/R scripts/Wast_incidence_functions.R")
-source("U:/R scripts/1) Download and clean data/dataset_compiling_functions.R")
+source("U:/GHAP-Data-Management/Wast_incidence_functions.R")
+source("U:/GHAP-Data-Management/dataset_compiling_functions.R")
 
 setwd("U:/data/WastIncDatasets")
 

@@ -1,0 +1,131 @@
+---
+title: "Time-varying risk factor exploration"
+author: "Andrew Mertens"
+date: "March 14, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=F}
+
+library(tidyverse)
+load("U:/data/Compiled Datasets/CompiledLongData.Rdata")
+
+colnames(d)
+
+
+d<-d[,-c(1:2,6:15,18:23,29,33,34,37:42)]
+for(i in 4:ncol(d)){
+  d[,i] <- as.numeric(d[,i])
+}
+
+```
+
+
+
+### Studies with percent days with Diarrhea
+
+(Percent of total days under observation that the child had diarrhea during. Not time-varying-for the whole study duration.)
+
+```{r, echo=F}
+print(table(d$STUDYID[!is.na(d$PCTDIAR)]))
+```
+
+### Stratified by diarrhea flag variable
+
+```{r, echo=F}
+print(table(d$STUDYID[!is.na(d$PCTDIAR)], d$DIARFL[!is.na(d$PCTDIAR)]))
+```
+
+So it looks like for ~1/2 of studies with percent days with diarrhea information, there isn't accompanying information to tell when the diarrhea episodes occured.
+
+
+###Drop diarrhea and breastfeeding variables variables that are actually subject level, rather than time-varying
+```{r}
+d <- subset(d, select= -c(DIARDAYS, DIAREPS, DURBRST, PCTDIAR, SUMEP,SUMDIAR, SUMDAYS))
+```
+
+
+```{r, include=F, warning=F, message=F}
+res <- d %>% subset(., select=-c(AGEDTH,DEAD)) %>% group_by(STUDYID, SUBJID) %>% summarise_all(funs(sd), na.rm=T) %>% ungroup() %>%
+  subset(., select=-c(SUBJID, AGEDAYS)) %>%group_by(STUDYID) %>% summarise_all(funs(mean), na.rm=T)
+res
+
+res_long <- reshape(as.data.frame(res), idvar="STUDYID", varying=list(2:4),  direction="long")
+res_long$variable <- factor(res_long$time, labels=colnames(res)[-1])
+res_long <- res_long %>% rename(mean_sd=COUGHFL) %>% filter(!is.na(mean_sd))
+res_long$mean_sd[res_long$mean_sd==0] <- -0.1
+res_long <- droplevels(res_long)
+
+
+#Sort flag variables first
+p1 <- ggplot(res_long, aes(x=variable, y=mean_sd)) +geom_bar(stat="identity") + 
+      geom_hline(yintercept = 0) +
+      facet_wrap(~STUDYID) + theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Bar plot of SD's of each time varying variable
+Variables:
+  *  COUGHFL: Flag for child has cough at time of observation
+  *  DIARFL: Flag for child has diarrhea at time of observation
+  *  BFEDFL: Flag for child has breastfed on the day of observation
+
+Barplot shows the mean of within-child standard deviations of time-varying indicators. Mean SD's of 0 indicated that the variable has no within-child variation within that study.  Mean SD's of 0 have been recoded to -0.1 for visability, so variables with no bars indicate the variable is not present in a study. 
+
+```{r, echo=F}
+print(p1)
+```
+
+
+## Mortality plots
+
+### Compare DEAD flag across studies
+```{r, echo=F}
+print(table(d$STUDYID, d$DEAD))
+```
+
+### Children marked dead who don't have an age of death
+
+Row: if age of death is missing
+Column: indicator if the child died
+
+```{r, echo=F}
+print(table(is.na(d$AGEDTH), d$DEAD))
+```
+
+
+```{r, echo=F, warning=F, message=F}
+
+df <- d %>% filter(!is.na(AGEDTH)) %>% subset(., select=c(SUBJID, AGEDAYS, STUDYID, AGEDTH, DEAD)) %>%
+            group_by(STUDYID, SUBJID) %>% arrange(AGEDAYS) %>%
+            mutate(errorflag= factor(as.numeric(max(AGEDAYS) > AGEDTH))) %>%
+            ungroup() %>% group_by(STUDYID) %>%
+            mutate(rank=rank(AGEDTH))
+
+
+p2 <- ggplot(df) + 
+  geom_line(aes(x=AGEDAYS, y=rank, group=SUBJID), alpha=0.2) +
+  geom_point(aes(x=AGEDAYS, y=rank, group=SUBJID), alpha=0.2) +
+  geom_point(aes(x=AGEDTH, y=rank, group=SUBJID, color=errorflag), shape=4, size=4) + 
+  facet_wrap(~STUDYID, scales="free") +
+  theme_bw() + scale_color_manual(values=c("black","red"))
+```
+
+
+###Plot of ages of death of children across GHAP studies with mortality information
+
+For each study with mortality, drop children who didn't die. Rank order children by reported age of death. Y axis is rank. X axis is point and line of anthropometry observations (AGEDAYS) and X's mark the recorded age of death. X is colored red if it occurs before the age of the child at the final observation of anthropometry (AKA the age at death is in error).
+
+```{r, echo=F}
+print(p2)
+```
+
+
+
+
+

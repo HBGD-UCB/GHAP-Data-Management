@@ -468,13 +468,30 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
             "SEX","AGEDAYS","COUNTRY",
             "WAZ",
             "HAZ",
-            "BMI","WHZ","ARM")
+            "BMI","WHZ","ARM",
+            "SUMEP","SUMDIAR",
+            "SUMDAYS","PCTDIAR",
+            "VISITNUM","VISIT",
+            "DEAD","DURBRST",
+            "COUGHFL","CHCIRCM",
+            "VISITDY",
+            "ANTPTNUM",
+            "FREECHL", "IMPRLAT",
+            "WATSOAP", "LNSN",    "LNSP",    "FCSAFDIS",
+            #additional diarrhea vars
+            "DIARFL","SUMDIAR",  
+            "DIARDAYS", "CSUMDIAR",
+            "DIAREPS" , "DIARBFEN" ,
+            "DIARRHOEA","DIARRHOEA_NEONATAL",
+            "DIARFL",
+            "FEVERFL",
+            "BFEDFL",
+            "EXBFEDFL",
+            "AGEDTH",
+            "DEAD","VOMFL","APTFL"
+    )
     
-    dynvars<-c(
-      "AGEDAYS",
-      "WAZ",
-      "HAZ",
-      "BMI","WHZ")
+    dynvars<-c("")
   }
   
   
