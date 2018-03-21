@@ -299,22 +299,6 @@ tmle_risk<-function(dat=d,
                     sparseN=5,
                     adjusted=F){
   
-  
-<<<<<<< HEAD
-                                   dat=dsub
-                                   Y="stunt"
-                                   W=colnames(dsub)[which(!(colnames(dsub) %in% c("STUDYID","COUNTRY","SUBJID","AGEDAYS","HAZ","stunt","sevstunt", Avar, paste0("miss_",Avar))))]
-                                   n.cat=n.cat
-                                   A=Avar
-                                   Acuts=Acuts
-                                   Alevels=Alevels
-                                   reflevel=1
-                                   family="binomial"
-                                   SLlibrary="SL.glm"
-                                   outputdf=NULL
-                                   overall.dist=T
-                                   sparseN=5
-                                   adjusted=T
 
         
                                    
@@ -335,8 +319,6 @@ tmle_risk<-function(dat=d,
   # Alevels=c("Firstborn", "Secondborn","Thirdborn","4th+ born")
   # 
   
-=======
->>>>>>> 776799dbd659ca5b8d172b9522a9c2d80fa37eec
   #get study name
   study <-deparse(substitute(dat))
   
@@ -403,7 +385,7 @@ tmle_risk<-function(dat=d,
   #Extract desired levels
   levelmeans<-levelmeans[1:n.cat,]
   
-<<<<<<< HEAD
+
 #Code for TMLE3
   
   #NOTE: Make sure I'm feeding in a factor, not numeric A, for the multinomial
@@ -428,9 +410,7 @@ tmle_risk<-function(dat=d,
   # tmle_fit_PAF <- tmle3(tmle_PAR(baseline_level = 0),d, nodes, learner_list)
   # print(tmle_fit_PAF)
   # tmle_fit_PAF$delta_summary
-  
-=======
->>>>>>> 776799dbd659ca5b8d172b9522a9c2d80fa37eec
+
   
   res<-NULL
   for(i in comparisons){
