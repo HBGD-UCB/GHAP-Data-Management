@@ -11,10 +11,17 @@ library(epitools)
 library(binom)
 theme_set(theme_bw())
 
-setwd("U:/R scripts")
+
+setwd("U:/GHAP-Data-Management")
 source("Wast_incidence_functions.R")
 
 setwd("U:/data")
+
+d<-readRDS("vb12.rds")
+vb12_inc<-WastIncCalc(d)
+vb12_inc_table <- WastIncTable(vb12_inc)
+save(vb12_inc, vb12_inc_table, file="WastIncDatasets/vb12_inc.Rdata")
+
 
 d<-readRDS("gmsn.rds")
 gmsn_inc<-WastIncCalc(d)
