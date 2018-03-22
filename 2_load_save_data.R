@@ -222,6 +222,13 @@ impute_static_vars<-function(d){
 setwd("U:/data/")
 
 
+d<-use_study("Vitamin-B12")
+colnames(d)<- toupper(colnames(d))
+saveRDS(d, file="vb12_raw.rds")
+d <- impute_static_vars(d)
+saveRDS(d, file="vb12.rds")
+rm(d) 
+
 d<-use_study("agakhanuniv")
 colnames(d)<- toupper(colnames(d))
 saveRDS(d, file="akup_raw.rds")
@@ -583,12 +590,12 @@ rm(d)
 # saveRDS(d, file="eczn.rds")
 # rm(d)
 
-# d<-use_study("prvd") 
-# colnames(d)<- toupper(colnames(d))
-# saveRDS(d, file="prvd_raw.rds")
-# d <- impute_static_vars(d)
-# saveRDS(d, file="prvd.rds")
-# rm(d)
+d<-use_study("prvd")
+colnames(d)<- toupper(colnames(d))
+saveRDS(d, file="prvd_raw.rds")
+d <- impute_static_vars(d)
+saveRDS(d, file="prvd.rds")
+rm(d)
 
 
 # d<-use_study("mmam") 

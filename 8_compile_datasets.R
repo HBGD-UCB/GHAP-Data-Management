@@ -11,6 +11,22 @@ setwd("U:/data/WastIncDatasets")
 
 
 #------------------------------------------------
+# 24 month CI dataframe: uncleaned convariates
+# as test dataset to clean covariates
+#------------------------------------------------
+
+compile_hbgdki_data(minage=0, maxage=24*30.25,
+                    cum_inc=T, recoveryoutcome=F,
+                    data_location = "U:/data/WastIncDatasets",
+                    file_location="U:/data/Compiled Datasets/",
+                    filename="PooledUncleaned24mo_tempdata.Rdata", 
+                    rds=F,
+                    suffix="_inc",
+                    dont_clean=T)
+
+
+
+#------------------------------------------------
 # Longitudinal data
 #------------------------------------------------
 
