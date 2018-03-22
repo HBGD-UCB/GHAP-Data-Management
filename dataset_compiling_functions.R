@@ -134,7 +134,7 @@ impute_missing_hbgdki <- function(d,  outcomes = c("stunt", "sevstunt", "HTCM", 
                                                    "duration","wasting_duration","born_sevwast_inc","sevwasting_episode",
                                                    "sev_episode_ID","sevwasting_duration", "wast_rec90d","wast_rec60d",
                                                    "wast_rec30d","sevwast_inc90d","sevwast_inc60d","sevwast_inc30d")){
-
+  
   outcome.df <- d[,which(colnames(d) %in% c("STUDYID", "SUBJID", outcomes))]
   d <- d[,which(!(colnames(d) %in% outcomes))]
   
@@ -192,7 +192,7 @@ bindGHAP<-function(study, varlist=NULL, dynamicvars=NULL, d,
     rm(object)
   }
   
-
+  
   
   if("WHZ" %in% colnames(study.d)){
     
@@ -210,7 +210,7 @@ bindGHAP<-function(study, varlist=NULL, dynamicvars=NULL, d,
     study.d$maxage <- maxage
     
     
-
+    
     #Find anthro at enrollment
     enrol_anthro <-study.d %>% group_by(SUBJID) %>% 
       arrange(AGEDAYS) %>% 
@@ -276,12 +276,12 @@ bindGHAP<-function(study, varlist=NULL, dynamicvars=NULL, d,
         }
       }
     }
-
+    
     #merge in enrollment anthro
     study.d <- left_join(study.d, enrol_anthro, by=c("COUNTRY","SUBJID"))
     study.d <- as.data.frame(study.d)
     
-
+    
   }else{
     study.d <- apply(study.d, 2, as.character)
     study.d <- as.data.frame(study.d)
@@ -311,7 +311,7 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
                                 data_location="U:/data/WastIncDatasets",
                                 file_location="U:/results",
                                 filename, long.data=F,
-                                rds=T, noBW=F,
+                                rds=F, noBW=F,
                                 suffix="_inc",
                                 filesuffix=NULL,
                                 dont_clean=F){
@@ -482,60 +482,60 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
   setwd(data_location)
   
   d<-NULL 
-  d<-bindGHAP(study="akup", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="bfzn", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="cmc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)  
-  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="peru") 
-  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil") 
-  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="guinea_bissau") 
-  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="bangladesh") 
-  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil") 
-  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="guatemala") 
-  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="india") 
-  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="philippines") 
-  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="southafrica") 
-  d<-bindGHAP(study="cntt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="ee", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)   
-  d<-bindGHAP(study="eu", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)   
+  d<-bindGHAP(study="akup", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="bfzn", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="cmc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="peru")
+  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil")
+  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="guinea_bissau")
+  d<-bindGHAP(study="cmin", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="bangladesh")
+  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil")
+  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="guatemala")
+  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="india")
+  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="philippines")
+  d<-bindGHAP(study="cort", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="southafrica")
+  d<-bindGHAP(study="cntt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="ee", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="eu", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="gmsn", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
-  d<-bindGHAP(study="gbsc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="irc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)  
-  d<-bindGHAP(study="jvt3", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
+  d<-bindGHAP(study="gbsc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="irc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="jvt3", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="jvt4", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
-  d<-bindGHAP(study="knba", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="lcn5", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="bangladesh") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="india") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="nepal") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="peru") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="southafrica") 
-  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="tanzania") 
-  d<-bindGHAP(study="nbrt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="ncry", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="prbt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="phua", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="rspk", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="cmpf", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="fspp", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="tdc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)  
-  d<-bindGHAP(study="tzc2", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="zvit", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
-  d<-bindGHAP(study="zmrt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW) 
+  d<-bindGHAP(study="knba", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="lcn5", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="bangladesh")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="brazil")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="india")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="nepal")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="peru")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="southafrica")
+  d<-bindGHAP(study="mled", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW, country="tanzania")
+  d<-bindGHAP(study="nbrt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="ncry", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="prbt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="phua", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="rspk", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="cmpf", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="fspp", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="tdc", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="tzc2", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="zvit", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="zmrt", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="lnsz", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="wsb", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="wsk", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="ilnd", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
-  d<-bindGHAP(study="ildm", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
-  d<-bindGHAP(study="vita", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  d<-bindGHAP(study="ildm", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
+  d<-bindGHAP(study="vita", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="vb12", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
   
   # #clean covariates and impute missingness
-  if(long.data==F | dont_clean==T){
+  if(long.data==F & dont_clean==F){
     d <- clean_covariates_hbgdki(d)
     d <- impute_missing_hbgdki(d)
   }
-  
+  print(file_location)
   setwd(file_location)
   save(d, file=filename)
 }
@@ -562,21 +562,6 @@ clean_covariates_hbgdki <- function(d){
   d<-d %>% filter(WHZ>-5 & WHZ<5)
   dim(d)
   summary(d$WHZ)
-  
-  
-  #Calculate wasting
-  d$wast<-ifelse(d$WHZ< (-2), 1,0)
-  d$wast[is.na(d$WHZ)]<-NA
-  
-  d$sevwast<-ifelse(d$WHZ< (-3), 1,0)
-  d$sevwast[is.na(d$WHZ)]<-NA
-  
-  #Calculate stunting
-  d$stunt<-ifelse(d$HAZ< (-2), 1,0)
-  d$stunt[is.na(d$HAZ)]<-NA
-  
-  d$sevstunt<-ifelse(d$HAZ< (-3), 1,0)
-  d$sevstunt[is.na(d$HAZ)]<-NA
   
   
   
@@ -673,7 +658,7 @@ clean_covariates_hbgdki <- function(d){
   
   
   table(d$DLVLOC)
-  d$homedelivery <- ifelse(d$DLVLOC=="Home" | d$DLVLOC=="Maternity home",1,0)
+  d$homedelivery <- ifelse(d$DLVLOC=="Home",1,0)
   d$homedelivery[is.na(d$DLVLOC)] <- NA
   table(d$homedelivery)
   
@@ -685,17 +670,16 @@ clean_covariates_hbgdki <- function(d){
   
   table(d$DELIVERY)
   
-  d$vagbirth <- ifelse(d$DELIVERY=="Vaginal" | 
-                         d$DELIVERY=="Breech Vaginal" |
-                         d$DELIVERY=="Forceps" |
-                         d$DELIVERY=="Normal Vaginal" |
-                         d$DELIVERY=="Normal vaginal birth" |
-                         d$DELIVERY=="Normal Viginal" |
-                         d$DELIVERY=="Spontaneous vaginal" |
-                         d$DELIVERY=="Spontaneous Vaginal Delivery" |
-                         d$DELIVERY=="Suction" |
-                         d$DELIVERY=="Vacuum" |
-                         d$DELIVERY=="Vacuum Extraction" ,1,0)
+  d$vagbirth <- ifelse(d$DELIVERY=="C-section" | 
+                         d$DELIVERY=="C-Section" |
+                         d$DELIVERY=="Planned caesarean section" |
+                         d$DELIVERY=="Caesarean" |
+                         d$DELIVERY=="Ceasarean" |
+                         d$DELIVERY=="Elective C Section" |
+                         d$DELIVERY=="Elective C/S" |
+                         d$DELIVERY=="Emergency C Section" |
+                         d$DELIVERY=="Emergency C/S" |
+                         d$DELIVERY=="Emergency caesarean section" ,0,1)
   d$vagbirth[is.na(d$DELIVERY)] <- NA
   table(d$vagbirth)
   
@@ -737,7 +721,7 @@ clean_covariates_hbgdki <- function(d){
   summary(d$MAGE)
   
   #Figure out which study does not have age classified in years
-  d %>% group_by(STUDYID) %>% summarize(mn=mean(MAGE,na.rm=T)) %>% filter(!is.na(mn))
+  d %>% group_by(STUDYID) %>% summarize(mn=mean(MAGE,na.rm=T)) %>% filter(!is.na(mn)) %>% as.data.frame()
   
   d$MAGE[d$STUDYID=="ki1119695-PROBIT"] <- d$MAGE[d$STUDYID=="ki1119695-PROBIT"]/365.25
   
@@ -756,22 +740,26 @@ clean_covariates_hbgdki <- function(d){
   #FHOUSEH Father lives in household
   table(d$FHOUSEH)
   table(d$MMARIT)
+  table(d$FHOUSEH, d$MMARIT)
   
-  d$single <- ifelse(d$FHOUSEH=="No, permanently elsewhere",1,0)
-  d$single[is.na(d$FHOUSEH)] <- NA
-  
-  d$single <- ifelse(d$MMARIT=="Common law" | d$MMARIT=="Married",0,1)
-  d$single[is.na(d$MMARIT) & is.na(d$FHOUSEH)] <- NA
+  d$single <- NA
+  d$single[d$MMARIT=="Common law" | d$MMARIT=="Married"] <- 0
+  d$single[d$MMARIT=="Divorced" | d$MMARIT=="Separated" | d$MMARIT=="Single" | d$MMARIT=="Widowed"] <- 1
+  d$single[d$FHOUSEH=="No, temporarily elsewhere (<2 months)" | d$FHOUSEH=="Yes"] <- 0
+  d$single[d$FHOUSEH=="No, permanently elsewhere"] <- 1
   table(d$single)
+  
   
   #------------------------------------------------
   # 14) Breastfeeding practices 
   #------------------------------------------------
-  d$breastfeeding<-"Exclusively breastfed"
-  d$breastfeeding[d$FEEDING=="Mixture breast/formula fed" | d$FEEDING!=""]<-"Mixed"
+  table(d$FEEDING)
+  d$breastfeeding<-NA
+  d$breastfeeding[d$FEEDING=="Exclusively breast fed" | d$FEEDING=="Breast feeding"] <- "Exclusively breastfed"
+  d$breastfeeding[d$FEEDING=="Mixture breast/formula fed" ]<-"Mixed"
   d$breastfeeding[d$FEEDING=="Exclusively formula fed" | d$FEEDING=="Bottle"]<-"Exclusively formula fed"
-  d$breastfeeding[d$FEEDING=="Unknown"]<-"Missing"
-  d$breastfeeding<-factor(d$breastfeeding, levels=c("Exclusively breastfed", "Mixed", "Exclusively formula fed"))
+  d$breastfeeding[d$FEEDING=="Unknown"| d$FEEDING==""]<-"Missing"
+  d$breastfeeding<-factor(d$breastfeeding, levels=c("Exclusively breastfed", "Mixed", "Exclusively formula fed","Missing"))
   table(d$breastfeeding)
   
   
@@ -816,7 +804,7 @@ clean_covariates_hbgdki <- function(d){
   #------------------------------------------------
   
   #Merge in HHwealth -asset based PCA:
-  load("U:/data/allGHAPstudies-HHwealth.Rdata")
+  load("U:/results/allGHAPstudies-HHwealth.Rdata")
   colnames(pca)
   d<-left_join(d, pca, by=c("STUDYID", "COUNTRY" ,"SUBJID"))
   table(d$HHwealth_quart)
@@ -855,23 +843,26 @@ clean_covariates_hbgdki <- function(d){
   #------------------------------------------------
   # 20) Total number of persons
   #------------------------------------------------
-  
-  d$NCOMP <- as.numeric(d$NCOMP)
-  table(d$NCOMP)
+  table(is.na(d$NCOMP), is.na(d$NPERSON))
   
   d$NPERSON <- as.numeric(d$NPERSON)
   table(d$NPERSON)
   
-  d$NCOMP[is.na(d$NCOMP)] <- d$NPERSON[is.na(d$NCOMP)]
+  d$NCOMP <- as.numeric(d$NCOMP)
+  table(d$NCOMP)
   
-  quantile(d$NCOMP, na.rm=T)
-  d$ncomp<-NA
-  d$ncomp[d$NCOMP<6] <- "5 or less"
-  d$ncomp[d$NCOMP>5 & d$NCOMP<9] <- "6-8"
-  d$ncomp[d$NCOMP>8 & d$NCOMP<13] <- "9-12"
-  d$ncomp[d$NCOMP>12] <- "13+"
-  d$ncomp <- as.factor(d$ncomp)
-  table(d$ncomp)
+  d$NPERSON[is.na(d$NPERSON)] <- d$NCOMP[is.na(d$NPERSON)] 
+  
+  quantile(d$NPERSON, na.rm=T)
+  d$nhh<-NA
+  d$nhh[d$NPERSON<4] <- "3 or less"
+  d$nhh[d$NPERSON==4] <- "4"
+  d$nhh[d$NPERSON>4 & d$NPERSON<6] <- "5-6"
+  d$nhh[d$NPERSON>6] <- "6+"
+  d$nhh <- as.factor(d$nhh)
+  table(d$nhh)
+  
+  table(d$STUDYID, d$nhh)
   
   #------------------------------------------------
   # 21) Number of children <5y
@@ -883,7 +874,7 @@ clean_covariates_hbgdki <- function(d){
   d$nchild5<-NA
   d$nchild5[d$NCHLDLT5==0] <- "0"
   d$nchild5[d$NCHLDLT5==1] <- "1"
-  d$nchild5[d$NCHLDLT5>=2] <- "2+"
+  d$nchild5[d$NCHLDLT5>2] <- "2+"
   d$nchild5 <- as.factor(d$nchild5)
   table(d$nchild5)
   
@@ -927,10 +918,10 @@ clean_covariates_hbgdki <- function(d){
                              d$FLOOR=="Dung and Clay" | d$FLOOR=="Dung and Clay and Sand" | d$FLOOR=="earth" | d$FLOOR=="Earth" | d$FLOOR=="Earth or bamboo" |
                              d$FLOOR=="Earth/Sand" | d$FLOOR=="ground" | d$FLOOR=="Ground" | d$FLOOR=="HALF SEND AND HALF CEMMENTED." | d$FLOOR=="HOUSE BEING BUILD" |
                              d$FLOOR=="Katcha" | d$FLOOR=="Katcha/Mud" | d$FLOOR=="MUD,GRAVEL" | d$FLOOR=="ONE ROOM HAS CEMENT AND ONE SAND (FLOOR)" |
-                             d$FLOOR=="Palm/Bamboo" | d$FLOOR=="Thatch, grass, sticks, branches" | d$FLOOR=="cane" | d$FLOOR=="0"
+                             d$FLOOR=="Dirt/mud/clay" | d$FLOOR=="Palm/Bamboo" | d$FLOOR=="Thatch, grass, sticks, branches" | d$FLOOR=="cane" | d$FLOOR=="0"
                            ,0,1)
   
-  d$improved.floor[d$FLOOR == "F"  | d$FLOOR == "Does not know" | d$FLOOR == "No walls/ Fence" | d$FLOOR=="Other" | d$FLOOR=="other" | d$FLOOR==""]<-NA
+  d$improved.floor[d$FLOOR == "F"  | d$FLOOR == "Does not know" | d$FLOOR == "No walls/ Fence" | d$FLOOR=="Others"| d$FLOOR=="Other" | d$FLOOR=="other" | d$FLOOR==""]<-NA
   
   
   #------------------------------------------------
@@ -939,9 +930,9 @@ clean_covariates_hbgdki <- function(d){
   #Replace sanitation with sanitation arm from WASH Benefits studies
   table(d$ARM)
   
-  d$SANITATN[d$shortid=="wsb" | d$shortid=="wsk"]<-"No sanitation intervention"
-  d$SANITATN[d$ARM=="WSH" | d$ARM=="Sanitation" | d$ARM=="Nutrition + WSH"]<-"Sanitation intervention"
-  table(d$SANITATN)
+  # d$SANITATN[d$shortid=="wsb" | d$shortid=="wsk"]<-"No sanitation intervention"
+  # d$SANITATN[d$ARM=="WSH" | d$ARM=="Sanitation" | d$ARM=="Nutrition + WSH"]<-"Sanitation intervention"
+  # table(d$SANITATN)
   
   
   d$improved.sanitation<-ifelse(
@@ -993,9 +984,9 @@ clean_covariates_hbgdki <- function(d){
   
   #Replace water source with water arm from WASH Benefits studies
   table(d$ARM)
-  d$H2OSRC[d$shortid=="wsb" | d$shortid=="wsk"]<-"No water intervention"
-  d$H2OSRC[d$ARM=="WSH" | d$ARM=="Water" | d$ARM=="Nutrition + WSH"]<-"Safe water intervention"
-  table(d$H2OSRC)
+  # d$H2OSRC[d$shortid=="wsb" | d$shortid=="wsk"]<-"No water intervention"
+  # d$H2OSRC[d$ARM=="WSH" | d$ARM=="Water" | d$ARM=="Nutrition + WSH"]<-"Safe water intervention"
+  # table(d$H2OSRC)
   
   
   table(d$H2OSRC)
@@ -1054,7 +1045,9 @@ clean_covariates_hbgdki <- function(d){
         "Bore hole",                               "Covered public well",                    
         "Piped into neighbors compound",          
         "Piped into house",                                 
-        "Piped into nearby compound",              "Covered well in house or yard")
+        "Piped into nearby compound",              "Covered well in house or yard",
+        "Piped into dwelling","Piped into dwelling, Public tap", "Piped into dwelling, Tube well/Handpump","Piped into dwelling, Water trucks","Public tap ","Public tap, Piped into dwelling","Public tap, Tube well/Handpump","Public tap, Water trucks", "Tube well/Handpump", "Tube well/Handpump, Piped into dwelling","Tube well/Handpump, Public tap", "Tube well/Handpump, Water trucks","Water trucks" 
+      )
     ,1,0)
   table(d$safe.water)
   
@@ -1070,9 +1063,9 @@ clean_covariates_hbgdki <- function(d){
   
   #Replace water treatment with water arm from WASH Benefits studies
   table(d$ARM)
-  d$H2OTRTP[d$STUDYID=="ki1000110-WASH-Bangladesh" | d$STUDYID=="ki1000111-WASH-Kenya"]<-"No water intervention"
-  d$H2OTRTP[d$ARM=="WSH" | d$ARM=="Water" | d$ARM=="Nutrition + WSH"]<-"Safe water intervention"
-  table(d$H2OTRTP)
+  # d$H2OTRTP[d$STUDYID=="ki1000110-WASH-Bangladesh" | d$STUDYID=="ki1000111-WASH-Kenya"]<-"No water intervention"
+  # d$H2OTRTP[d$ARM=="WSH" | d$ARM=="Water" | d$ARM=="Nutrition + WSH"]<-"Safe water intervention"
+  # table(d$H2OTRTP)
   
   d$treat.water<-ifelse(
     d$H2OTRTP=="Strain Through Cloth" | 
@@ -1261,7 +1254,7 @@ clean_covariates_hbgdki <- function(d){
            | d$COUNTRY=="KENYA" | d$COUNTRY=="MALAWI" | d$COUNTRY=="MALI" | d$COUNTRY=="MOZAMBIQUE"
            | d$COUNTRY=="SOUTH AFRICA" | d$COUNTRY=="TANZANIA, UNITED REPUBLIC OF" | d$COUNTRY=="ZIMBABWE"]<-"SSA"
   d$region[d$COUNTRY=="BANGLADESH" | d$COUNTRY=="INDIA" | d$COUNTRY=="NEPAL" | d$COUNTRY=="PAKISTAN" ]<-"south Asia"
-  d$region[d$COUNTRY=="CHINA" | d$COUNTRY=="PHILIPPINES"]<-"east Asia"
+  d$region[d$COUNTRY=="CHINA" | d$COUNTRY=="PHILIPPINES" | d$COUNTRY=="NEPAL" | d$COUNTRY=="PAKISTAN" ]<-"east Asia"
   d$region[d$COUNTRY=="BRAZIL" | d$COUNTRY=="ECUADOR" | d$COUNTRY=="GUATEMALA" | d$COUNTRY=="PERU" ]<-"Latin America"
   d$region[d$COUNTRY=="BELARUS"]<-"Europe"
   table(d$region)
