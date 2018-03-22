@@ -1,5 +1,9 @@
 
 
+
+
+
+
 #------------------------------------------------------
 # Author: Andrew Mertens
 # amertens@berkeley.edu
@@ -26,13 +30,131 @@ library(tmle)
 library(caret)
 
 #Open log
-sink("U:/Perminant files/Logs/assetPCA-allstudies.txt")
+#sink("U:/results/assetPCA-allstudies.txt")
+
+
+
+assetPCA<-function(dfull, varlist, reorder=F ){
+  
+  varlist<-c("STUDYID","SUBJID","COUNTRY",varlist)
+  
+  #Subset to only needed variables for subgroup analysis
+  ret <- dfull %>%
+    subset(select=c(varlist))
+  
+  for(i in 1:ncol(ret)){
+    ret[,i]<-ifelse(ret[,i]=="",NA,ret[,i])
+  } 
+  
+  #drop rows with no asset data
+  ret<-ret[rowSums(is.na(ret[,4:ncol(ret)])) != ncol(ret)-3,]  
+  
+  
+  #PCA of asset based wealth by enrollment
+  #Method based on: https://programming-r-pro-bro.blogspot.com/2011/10/principal-component-analysis-use.html
+  
+  #Select assets
+  ret<-as.data.frame(ret) 
+  id<-subset(ret, select=c("STUDYID","SUBJID","COUNTRY")) #drop subjectid
+  ret<-ret[,which(!(colnames(ret) %in% c("STUDYID","SUBJID","COUNTRY")))]
+  
+  #Drop assets with great missingness
+  for(i in 1:ncol(ret)){
+    cat(colnames(ret)[i],"\n")
+    print(table(is.na(ret[,i])))
+    print(class((ret[,i])))
+  }
+  
+  #Set missingness to zero
+  table(is.na(ret))
+  for(i in 1:ncol(ret)){
+    ret[,i]<-as.character(ret[,i])
+    ret[is.na(ret[,i]),i]<-"miss"
+    ret[,i]<-as.factor(ret[,i])
+    
+  }
+  table(is.na(ret))
+  
+  #Remove columns with almost no variance
+  if(length(nearZeroVar(ret))>0){
+    ret<-ret[,-nearZeroVar(ret)]
+  }
+  
+  #Convert factors into indicators
+  ret<-droplevels(ret)
+  ret<-design_matrix(ret)
+  if(length(nearZeroVar(ret))>0){
+    ret<-ret[,-nearZeroVar(ret)]
+  }
+  
+  
+  #Set missingness to zero
+  table(is.na(ret))
+  ret[is.na(ret)]<-0
+  table(is.na(ret))
+  
+  #Remove columns with almost no variance
+  if(length(nearZeroVar(ret))>0){
+    ret<-ret[,-nearZeroVar(ret)]
+  }
+  
+  ## Convert the data into matrix ##
+  ret<-as.matrix(ret)
+  
+  
+  ##Computing the principal component using eigenvalue decomposition ##
+  princ.return <- princomp(ret) 
+  
+  
+  ## To get the first principal component in a variable ##
+  load <- loadings(princ.return)[,1]   
+  
+  pr.cp <- ret %*% load  ## Matrix multiplication of the input data with the loading for the 1st PC gives us the 1st PC in matrix form. 
+  
+  HHwealth <- as.numeric(pr.cp) ## Gives us the 1st PC in numeric form in pr.
+  
+  #Create 4-level household weath index
+  quartiles<-quantile(HHwealth, probs=seq(0, 1, 0.25))
+  print(quartiles)
+  ret<-as.data.frame(ret)
+  ret$HHwealth_quart<-rep(1, nrow(ret))
+  ret$HHwealth_quart[HHwealth>=quartiles[2]]<-2
+  ret$HHwealth_quart[HHwealth>=quartiles[3]]<-3
+  ret$HHwealth_quart[HHwealth>=quartiles[4]]<-4
+  table(ret$HHwealth_quart)
+  ret$HHwealth_quart<-factor(ret$HHwealth_quart)
+  
+  if(reorder==T){
+    levels(ret$HHwealth_quart)<-c("Wealth Q4","Wealth Q3","Wealth Q2","Wealth Q1")
+    ret$HHwealth_quart<-factor(ret$HHwealth_quart, levels=c("Wealth Q1", "Wealth Q2","Wealth Q3","Wealth Q4"))
+  }else{
+    levels(ret$HHwealth_quart)<-c("Wealth Q1", "Wealth Q2","Wealth Q3","Wealth Q4")
+  }
+  
+  #Table assets by pca quartile to identify wealth/poverty levels
+  d<-data.frame(id, ret)
+  wealth.tab <- d %>% subset(., select=-c(STUDYID, SUBJID, COUNTRY)) %>%
+    group_by(HHwealth_quart) %>%
+    summarise_all(funs(mean)) %>% as.data.frame()
+  print(wealth.tab)
+  
+  #Save just the wealth data
+  pca.wealth<-d %>% subset(select=c(STUDYID, SUBJID, COUNTRY, HHwealth_quart))
+  
+  pca.wealth$SUBJID<-as.numeric(as.character(pca.wealth$SUBJID))
+  
+  d <-dfull %>% subset(., select=c("STUDYID","SUBJID","COUNTRY"))
+  d$SUBJID<-as.numeric(as.character(d$SUBJID))
+  d<-left_join(d, pca.wealth, by=c("STUDYID","SUBJID","COUNTRY"))
+  return(d)
+}
+
+
 
 
 
 #Identify studies measuring household assets 
-setwd("U:/Perminant files/R scripts/")
-source("HBGDki_function.R")
+
 
 setwd("U:/data")
 
@@ -55,31 +177,22 @@ unique(d$shortid)
 # akup
 #---------
 study<-"akup"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-#varlist<-colnames(d)[ -1 + c(53:57,59:60,63:66,68:69)] #Not converging
-varlist<-colnames(d)[ -1 + c(53:57,59:60,63:66)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("NROOMS","BICYCLE",  "CAR","CART","COOKFUEL","ELEC","FRIG","MCYCLE",  
+                                        "PHONE","RADIO", "SEWING",   "TV" ,"WASHMAC" )]
 d<-assetPCA(d, varlist, reorder=T)
 table(d$HHwealth_quart)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
-#---------
-# bngr
-#---------
-study<-"bngr"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(31:34,37,42,44:46,49,50)]
-d<-assetPCA(d, varlist, reorder=T)
-saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
 #---------
 # cmc
 #---------
 study<-"cmc"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(49:52,57:60)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("NROOMS","CAR","CLTHCAB", "COOKPLAC","OWNHOME","ROOF","TV","WALL")]
 d<-assetPCA(d, varlist, reorder=F)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -88,9 +201,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # cntt 
 #---------
 study<-"cntt"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(30,31,34,38,41)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("CAR", "FRIG", "LLPHONE", "NROOMS",  "RADIO",  "TV")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -98,59 +211,20 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # dvds
 #---------
 study<-"dvds"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(36:41,45,50:56,58)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("BED", "BICYCLE", "CAR", "CHAIR", "FAN", "FRIG", "MCYCLE", "NBEDROOM", "PHONE", "RADIO", "SEWING", "TABLE", "TV", "WATCH")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
-#---------
-# eegg- Note: only 1 asset
-#---------
-# study<-"eegg"
-# d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-# colnames(d)
-# varlist<-colnames(d)[c()]
-# d<-assetPCA(d, varlist, reorder=F)
-# saveRDS(d, file=paste0(study, '.HHwealth.rds') )
-
-#---------
-# eczn
-#---------
-study<-"eczn"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(80,81,83,87:89)]
-d<-assetPCA(d, varlist, reorder=T)
-saveRDS(d, file=paste0(study, '.HHwealth.rds') )
-
-# #---------
-# # gems
-# #---------
-# study<-"gems"
-# d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-# colnames(d)
-# varlist<-colnames(d)[ -1 + c(32:36,38,41,44,52,57,58,63)]
-# d<-assetPCA(d, varlist, reorder=F)
-# saveRDS(d, file=paste0(study, '.HHwealth.rds') )
-# 
-# #---------
-# # gmsa
-# #---------
-# study<-"gmsa"
-# d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-# colnames(d)
-# varlist<-colnames(d)[ -1 + c(32:36,41,44,57,58,63)]
-# d<-assetPCA(d, varlist, reorder=T)
-# saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
 #---------
 # gmsn
 #---------
 study<-"gmsn"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(67:70,72,77:79,82:88)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in%   c("AGLAND",  "BICYCLE", "CAR", "ELEC",  "LLPHONE", "MCYCLE", "MOBILE","NROOMS", "RADIO", "RICKSHAW", "ROOF", "SEWING", "TV", "WALL")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -158,19 +232,20 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # ilnd
 #---------
 study<-"ilnd"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(318:328,331:334,350:354,358:360,363:368,370,371,373,375)]
-d<-assetPCA(d, varlist, reorder=T)
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("AGLAND", "BED", "BEDNET", "BICYCLE", "CAR", "CART", "CHAIR", "ELEC", "FAN", "FRIG", "MATTRESS", "MCYCLE", "NROOMS", "PHONE", "RADIO", "SEWING", "STOVE", "TABLE", "TV", "WASHMAC", "COOKPLAC", "ROOF", "WALL")]
+d<-assetPCA(d, varlist, reorder=F)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
 #---------
 # ildm
 #---------
 study<-"ildm"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(420:423,427:439,442:445,460:464,470,471,473:475,478:481)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in%  c("ROOF", "WALL", "COOKFUEL", "COOKPLAC", "PHONE", "AGLAND", "BED", "BEDNET", "BICYCLE", "CAR", "CHAIR", "ELEC", "FAN", "FRIG", 
+                                         "MATTRESS", "MCYCLE", "MOBILE", "NROOMS", "RADIO", "SEWING", "STOVE", "TABLE", "TV", "WASHMAC")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -178,9 +253,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # irc
 #---------
 study<-"irc"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(51:54,57:58,60:64)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("NROOMS", "CAR", "CLTHCAB", "COOKPLAC", "FLOOR", "LLPHONE", "MOBILE", "OWNHOME", "ROOF", "TV", "WALL")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -188,9 +263,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # jvt3
 #---------
 study<-"jvt3"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(99,100,103,104,106,108,113,114,119:122,124,125,134)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("BED", "BICYCLE",  "CLTHCAB", "ELEC", "GOAT", "MCYCLE", "MOBILE", "NROOMS", "RADIO", "RICKSHAW", "SEWING", "SOAP", "TV","WATCH",  "KITCHDSC", "ROOF")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -198,9 +273,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # jvt4
 #---------
 study<-"jvt4"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(112:113,116,117,119,121,123,125,128:129,131,132,133:135,137,138,139,149)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in%  c("BED", "BICYCLE", "CLTHCAB", "ELEC",  "MCYCLE", "MOBILE", "NROOMS", "RADIO", "RICKSHAW", "SEWING", "TV", "WATCH", "KITCHDSC", "ROOF")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -208,9 +283,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # lcn5
 #---------
 study<-"lcn5"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(20:22,26,31,34,36)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c( "BEDNET", "BICYCLE", "CAR", "MATTRESS", "RADIO", "ROOF", "WALL")]
 d<-assetPCA(d, varlist, reorder=F)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -260,43 +335,27 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
 
 
-#---------
-# npre -only TV asset
-#---------
-# study<-"npre"
-# d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-# colnames(d)
-# varlist<-colnames(d)[c()]
-# d<-assetPCA(d, varlist, reorder=F)
-# saveRDS(d, file=paste0(study, '.HHwealth.rds') )
+
 
 #---------
 # ppd only 1 asset
 #---------
 # study<-"ppd"
-# d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
+# d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
 # colnames(d)
 # varlist<-colnames(d)[c(28,31)]
 # d<-assetPCA(d, varlist, reorder=F)
 # saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
-#---------
-# pzn
-#---------
-study<-"pzn"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(44,45,47,50,60,62,64,65,66)]
-d<-assetPCA(d, varlist, reorder=F)
-saveRDS(d, file=paste0(study, '.HHwealth.rds') )
+
 
 #---------
 # prvd
 #---------
 study<-"prvd"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(416:430, 441, 442,451,452)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in%  c("BED", "BENCH", "BICYCLE", "CEILFAN", "CHAIR", "CLTHCAB", "DRAIN", "ELEC", "MCYCLE","NROOMS", "OWNHOME", "PHONE", "RADIO","SEWING", "TABLE", "TV", "WATCH",  "COOKPLAC", "ROOF", "WALL")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -304,9 +363,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # tzc2
 #---------
 study<-"tzc2"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(34:35,40:42)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("FAN", "FRIG", "RADIO", "SOFA", "TV")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -314,9 +373,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # tdc
 #---------
 study<-"tdc"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(41:45,47,49:55)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("NROOMS", "CAR", "CLTHCAB", "COOKPLAC", "FAN", "LLPHONE", "MOBILE", "OWNHOME", "ROOF", "TV", "WALL")]
 d<-assetPCA(d, varlist, reorder=F)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -325,9 +384,9 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # wsb
 #---------
 study<-"wsb"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(69,71:75,77,80:82,86:90,97,99)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("AGLAND",  "BICYCLE", "CHAIR", "CLTHCAB", "ELEC", "FRIG", "LLPHONE", "MCYCLE", "MOBILE", "RADIO", "SEWING", "TABLE", "TV", "WATCH",  "ROOF",  "WALL")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
@@ -335,60 +394,58 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 # wsk
 #---------
 study<-"wsk"
-d<-as.data.frame(bindGHAP_Fill(study, d=NULL))
-colnames(d)
-varlist<-colnames(d)[ -1 + c(22:23,27,29,30,32:34,37,39,40, 42)]
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c("BICYCLE", "CAR",  "ELEC", "MOBILE", "MCYCLE", "RADIO", "STOVE", "TV", "WATCH", "ROOF", "WALL")]
 d<-assetPCA(d, varlist, reorder=T)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
-
-
-
-
-
-
-
-#----------------------------------------------
-# Bind studies
-#----------------------------------------------
-
-asset_study <- c(
-  "akup",
-  "bngr",
-  "cmc",
-  "cntt",
-  "dvds",
-  "eczn",
-  "gmsn",
-  "ilnd",
-  "ildm",
-  "irc",
-  "jvt3",
-  "jvt4",
-  "lcn5",
-  "pzn",
-  "prvd",
-  "tzc2",
-  "tdc",
-  "wsb",
-  "wsk")
-
-#Add in study id
-d<-NULL
-for(i in 1:length(asset_study)){
-  temp<-readRDS(paste0(asset_study[i], '.HHwealth.rds'))
-  if("HHwealth_quart" %in% colnames(temp)){
-  d <- rbind(d, temp)
-  }
-}
-
-#check which studies don't have wealth quartile
-asset_study
-unique(d$STUDYID)
-
-
-
-pca<-d
-save(pca, file="allGHAPstudies-HHwealth.Rdata")
-
-sink()
-
+         
+         
+         
+         
+         
+         
+         
+         #----------------------------------------------
+         # Bind studies
+         #----------------------------------------------
+         
+         asset_study <- c(
+           "akup",
+           "cmc",
+           "cntt",
+           "dvds",
+           "gmsn",
+           "ilnd",
+           "ildm",
+           "irc",
+           "jvt3",
+           "jvt4",
+           "lcn5",
+           "prvd",
+           "tzc2",
+           "tdc",
+           "wsb",
+           "wsk")
+         
+         #Add in study id
+         d<-NULL
+         for(i in 1:length(asset_study)){
+           temp<-readRDS(paste0(asset_study[i], '.HHwealth.rds'))
+           if("HHwealth_quart" %in% colnames(temp)){
+             d <- rbind(d, temp)
+           }
+         }
+         
+         #check which studies don't have wealth quartile
+         asset_study
+         unique(d$STUDYID)
+         
+         
+         
+         pca<-d
+         save(pca, file="U:/results/allGHAPstudies-HHwealth.Rdata")
+         
+         #sink()
+         
+         
