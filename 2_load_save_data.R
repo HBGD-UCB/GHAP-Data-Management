@@ -222,6 +222,15 @@ impute_static_vars<-function(d){
 setwd("U:/data/")
 
 
+d<-read.csv("U:/data/Serrinha-VitA/Serrinha-VitA/adam/full_ki1000107_Serrinha_VitA.csv")
+colnames(d)<- toupper(colnames(d))
+saveRDS(d, file="svta_raw.rds")
+d <- impute_static_vars(d)
+saveRDS(d, file="svta.rds")
+rm(d) 
+
+
+
 d<-use_study("Vitamin-B12")
 colnames(d)<- toupper(colnames(d))
 saveRDS(d, file="vb12_raw.rds")

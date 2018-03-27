@@ -7,17 +7,18 @@ df <- d %>% group_by(STUDYID) %>% summarize_all(funs(mean), na.rm=T) %>% as.data
 
 head(df)
 
-df <- df[,-c(2:36)]
+df <- df[,-c(2:34)]
 
 colnames(df)
 
-for(i in 2:39){
+for(i in 2:38){
   df[,i] <-ifelse(is.na(df[,i]),"",1)
 }
-for(i in 40:ncol(df)){
+for(i in 39:ncol(df)){
   df[,i] <-ifelse(df[,i]==1,"",1)
   colnames(df)[i]<-paste0("not",colnames(df)[i])
 }
 
 write.csv(df, file="U:/results/diagnostic figures/covariate_presence.csv")
 
+table(d$STUDYID, d$safe.water)
