@@ -530,7 +530,10 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
   d<-bindGHAP(study="ildm", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="vita", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="vb12", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
-
+  d<-bindGHAP(study="svta", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  
+  
+  
   # #clean covariates and impute missingness
   if(long.data==F & dont_clean==F){
     d <- clean_covariates_hbgdki(d)

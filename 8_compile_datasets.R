@@ -41,6 +41,16 @@ compile_hbgdki_data(minage=0, maxage=24*30.25,
                     suffix="_inc")
 
 
+#full longitudinal data
+compile_hbgdki_data(minage=0, maxage=999999999,
+                    cum_inc=F, recoveryoutcome=F,
+                    long.data=T,
+                    data_location = "U:/data/",
+                    file_location="U:/data/Compiled Datasets",
+                    filename="CompiledLongData_AllAges.Rdata", 
+                    rds=T,
+                    suffix="_inc")
+
 
 #------------------------------------------------
 # Cumulative wasting incidence 
