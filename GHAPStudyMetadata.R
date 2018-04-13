@@ -10,7 +10,7 @@ library(stringr)
 
 set_git_base_path("U:/git")
 get_git_base_path()
-setwd("U:/data/Rally4b_data")
+setwd("U:/data/")
 
 #astudies <- as.data.frame(get_study_list_anthro())
 astudies <- as.data.frame(get_study_list())
@@ -171,9 +171,9 @@ for(i in 1:nrow(df)){
 }
 
 
-df[239,-ncol(df)]
+df[242,-ncol(df)]
 
-saveRDS(df, "GHAP_metadata.RDS")
+saveRDS(df, "U:/results/Metadata/GHAP_metadata.RDS")
 getwd()
 
 

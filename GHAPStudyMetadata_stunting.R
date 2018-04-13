@@ -56,7 +56,7 @@ astudies$short_id[astudies$short_id=="mlex" & !is.na(astudies$short_id)] <- "mle
 # monthly stunting prevalence
 
 v<-rep(NA, num_cohorts)
-df<- cbind(astudies, data.frame(numcountry=v, countrycohort=v, hasHAZ=v, stuntprev=v, numsubj=v, numobs=v, median_length_between_measures=v, sd_obs=v, minages=v, maxages=v, mortality=v, birthweek=v, RCT=v, diar=v,
+df<- cbind(astudies, data.frame(numcountry=v, countrycohort=v, hasHAZ=v, stuntprev=v, numsubj=v, numobs=v, numsubj_u24mo=v, numobs_u24mo=v, median_length_between_measures=v, sd_obs=v, minages=v, maxages=v, mortality=v, birthweek=v, RCT=v, diar=v,
                                 HAZsd=v, WAZsd=v, HAZsd=v, HAZsd_no_outliers=v, WAZsd_no_outliers=v, HAZsd_no_outliers=v, perc_length_decrease=v,
                                 stuntprev_m1=v, stuntprev_m2=v, stuntprev_m3=v, stuntprev_m4=v, stuntprev_m5=v, stuntprev_m6=v, stuntprev_m7=v, stuntprev_m8=v,
                                 stuntprev_m9=v, stuntprev_m10=v, stuntprev_m11=v, stuntprev_m12=v, stuntprev_m13=v, stuntprev_m14=v, stuntprev_m15=v, stuntprev_m16=v,
@@ -66,13 +66,11 @@ df<- cbind(astudies, data.frame(numcountry=v, countrycohort=v, hasHAZ=v, stuntpr
                                 n17=v, n18=v, n19=v, n20=v, n21=v, n22=v, n23=v, n24=v,
                                 variables=v))
 
-for(i in c(119:126,170)){
-#for(i in 1:nrow(df)){
+for(i in 1:nrow(df)){
   print(i)
-#  for(i in 48){
-    
+  
   res<-NULL
-  numcountry<- countrycohort <- stuntprev<- numsubj<- numobs<- minages<- maxages<- mortality<-sd_obs<-median_length_between_measures<- birthweek<- RCT<-diar<-variables<-NA
+  numcountry<- countrycohort <- stuntprev<- numsubj<- numobs<- numsubj_u24mo<- numobs_u24mo<- minages<- maxages<- mortality<-sd_obs<-median_length_between_measures<- birthweek<- RCT<-diar<-variables<-NA
   HAZsd <- WAZsd <- HAZsd <- HAZsd_no_outliers <- WAZsd_no_outliers <- HAZsd_no_outliers <- perc_length_decrease <- NA
   stuntprev_m1<- stuntprev_m2<- stuntprev_m3<- stuntprev_m4<- stuntprev_m5<- stuntprev_m6<- stuntprev_m7<- stuntprev_m8<-NA
   stuntprev_m9<- stuntprev_m10<- stuntprev_m11<- stuntprev_m12<- stuntprev_m13<- stuntprev_m14<- stuntprev_m15<- stuntprev_m16<-NA
@@ -88,86 +86,95 @@ for(i in c(119:126,170)){
   
   if(!is.null(d)){
     if("HAZ" %in% colnames(d)){
-    hasHAZ=T
-    d<-d[!is.na(d$HAZ),]
-    
-    #Subset to ages 0-24months
-    d<-d[d$AGEDAYS>=0 & d$AGEDAYS < 24*30.25,]
-    
-    numcountry<-length(unique(d$COUNTRY))
-    
-    
-    #Subset to country-cohort
-    d<-d[as.character(d$COUNTRY)==unique(as.character(d$COUNTRY))[df$cohortnum[i]],]
-    
-    countrycohort <- unique(as.character(d$COUNTRY))
-    
-    stuntprev<- mean(as.numeric(d$HAZ < (-2)), na.rm=T)*100
-    
-    numsubj<-length(unique(d$SUBJID))
-    
-    numobs<-mean(table(d$SUBJID))
-    
-    sd_obs<-sd(table(d$SUBJID))
-    
-    measure_time <- d %>% group_by(SUBJID) %>% 
-                          mutate(agelag=lag(AGEDAYS),
-                                 measure_length= AGEDAYS-agelag) %>%
-                          summarise(median_length=median(measure_length, na.rm=T))
-    
-    median_length_between_measures <- median(measure_time$median_length, na.rm=T)
-    
-    age <- d %>% group_by(SUBJID) %>% summarize(minage=min(AGEDAYS), maxage=max(AGEDAYS)) %>% as.data.frame()
-    minages<-mean(age[,2] , na.rm = T)
-    maxages<-mean(age[,3] , na.rm = T)
-    
-    mortality<-as.numeric("DEAD" %in% colnames(d))
-    birthweek<-as.numeric("BRTHWEEK" %in% colnames(d))   
-    RCT<-as.numeric("ARM" %in% colnames(d))
-    diar<-as.numeric("PCTDIAR" %in% colnames(d))
-    
-    
-    #Calculate standard deviation of monthly measurements
-    HAZsd <- sd(d$HAZ)
-    WAZsd <- sd(d$WAZ) 
-    HAZsd <- sd(d$HAZ) 
-    
-    #Calculate standard deviation of monthly measurements
-    HAZsd_no_outliers <- sd(d$HAZ[d$HAZ > -5 & d$HAZ < 5])
-    WAZsd_no_outliers <- sd(d$WAZ[d$WAZ > -5 & d$WAZ < 5]) 
-    HAZsd_no_outliers <- sd(d$HAZ[d$HAZ > -5 & d$HAZ < 5]) 
-    
-    #Calculate prevalence of height decrease between measurements
-    #Count a height decrease if height decreases more than WHO standard (2.8 x expert TEM of 0.29 =  0.812)
-    if(!is.null(d$LENCM)){
-      d$LENCM<-as.numeric(d$LENCM)
-    d <- d %>% arrange(SUBJID,AGEDAYS) %>% group_by(SUBJID) %>% 
-      mutate(LENCMlag=dplyr::lag(LENCM, n = 1, default = NA, order_by=AGEDAYS),
-             length_change=LENCM-LENCMlag,
-             length_decrease=ifelse(length_change< -0.812, 1, 0)) %>% ungroup()
-    perc_length_decrease <- mean(d$length_decrease, na.rm=T) *100
-    }else{
-      perc_length_decrease <- NA  
-    }
-    
-    
-    
-    
-    #Calculate monthly stunting
-    for(j in 0:23){
-      assign(paste('stuntprev_m', j+1, sep=''),  mean(as.numeric(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30] < (-2)), na.rm=T)*100)
-      assign(paste('n', j+1, sep=''),  length(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30]))
-    }
-    
-    
-    
-    
-    variables<-paste(colnames(d), collapse=', ' )
+      hasHAZ=T
+      d<-d[!is.na(d$HAZ),]
+      
+      
+      
+      numcountry<-length(unique(d$COUNTRY))
+      
+      
+      #Subset to country-cohort
+      d<-d[as.character(d$COUNTRY)==unique(as.character(d$COUNTRY))[df$cohortnum[i]],]
+      
+      countrycohort <- unique(as.character(d$COUNTRY))
+      
+      stuntprev<- mean(as.numeric(d$HAZ < (-2)), na.rm=T)*100
+      
+      numsubj<-length(unique(d$SUBJID))
+      
+      numobs<-mean(table(d$SUBJID))
+      
+      sd_obs<-sd(table(d$SUBJID))
+      
+      age <- d %>% group_by(SUBJID) %>% summarize(minage=min(AGEDAYS), maxage=max(AGEDAYS)) %>% as.data.frame()
+      minages<-mean(age[,2] , na.rm = T)
+      maxages<-mean(age[,3] , na.rm = T)
+      
+      #Subset to ages 0-24months
+      d<-d[d$AGEDAYS>=0 & d$AGEDAYS < 24*30.25,]
+      
+      numsubj_u24mo<-length(unique(d$SUBJID))
+      
+      numobs_u24mo<-mean(table(d$SUBJID))
+      
+      
+      measure_time <- d %>% group_by(SUBJID) %>% 
+        mutate(agelag=lag(AGEDAYS),
+               measure_length= AGEDAYS-agelag) %>%
+        summarise(median_length=median(measure_length, na.rm=T))
+      
+      median_length_between_measures <- median(measure_time$median_length, na.rm=T)
+      
+      
+      
+      mortality<-as.numeric("DEAD" %in% colnames(d))
+      birthweek<-as.numeric("BRTHWEEK" %in% colnames(d))   
+      RCT<-as.numeric("ARM" %in% colnames(d))
+      diar<-as.numeric("PCTDIAR" %in% colnames(d))
+      
+      
+      #Calculate standard deviation of monthly measurements
+      HAZsd <- sd(d$HAZ)
+      WAZsd <- sd(d$WAZ) 
+      HAZsd <- sd(d$HAZ) 
+      
+      #Calculate standard deviation of monthly measurements
+      HAZsd_no_outliers <- sd(d$HAZ[d$HAZ > -5 & d$HAZ < 5])
+      WAZsd_no_outliers <- sd(d$WAZ[d$WAZ > -5 & d$WAZ < 5]) 
+      HAZsd_no_outliers <- sd(d$HAZ[d$HAZ > -5 & d$HAZ < 5]) 
+      
+      #Calculate prevalence of height decrease between measurements
+      #Count a height decrease if height decreases more than WHO standard (2.8 x expert TEM of 0.29 =  0.812)
+      if(!is.null(d$LENCM)){
+        d$LENCM<-as.numeric(d$LENCM)
+        d <- d %>% arrange(SUBJID,AGEDAYS) %>% group_by(SUBJID) %>% 
+          mutate(LENCMlag=dplyr::lag(LENCM, n = 1, default = NA, order_by=AGEDAYS),
+                 length_change=LENCM-LENCMlag,
+                 length_decrease=ifelse(length_change< -0.812, 1, 0)) %>% ungroup()
+        perc_length_decrease <- mean(d$length_decrease, na.rm=T) *100
+      }else{
+        perc_length_decrease <- NA  
+      }
+      
+      
+      
+      
+      #Calculate monthly stunting
+      for(j in 0:23){
+        assign(paste('stuntprev_m', j+1, sep=''),  mean(as.numeric(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30] < (-2)), na.rm=T)*100)
+        assign(paste('n', j+1, sep=''),  length(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30]))
+      }
+      
+      
+      
+      
+      variables<-paste(colnames(d), collapse=', ' )
     }else{
       hasHAZ=F
     }
   }
-  res<-t(c(numcountry, countrycohort, hasHAZ, stuntprev, numsubj, numobs, median_length_between_measures, sd_obs, minages, maxages, mortality, birthweek, RCT, diar, 
+  res<-t(c(numcountry, countrycohort, hasHAZ, stuntprev, numsubj, numobs, numsubj_u24mo, numobs_u24mo, median_length_between_measures, sd_obs, minages, maxages, mortality, birthweek, RCT, diar, 
            HAZsd, WAZsd, HAZsd, HAZsd_no_outliers, WAZsd_no_outliers, HAZsd_no_outliers, perc_length_decrease, 
            stuntprev_m1, stuntprev_m2, stuntprev_m3, stuntprev_m4, stuntprev_m5, stuntprev_m6, stuntprev_m7, stuntprev_m8,
            stuntprev_m9, stuntprev_m10, stuntprev_m11, stuntprev_m12, stuntprev_m13, stuntprev_m14, stuntprev_m15, stuntprev_m16,
@@ -184,20 +191,21 @@ for(i in c(119:126,170)){
 
 df[48,]
 
-
-saveRDS(df, "U:/results/GHAP_metadata_stunting.RDS")
+saveRDS(df, "U:/results/Metadata/GHAP_metadata_stunting.RDS")
 getwd()
 
 
+df2 <- df %>% filter(status=="QC completed" & study_type=="Longitudinal" & anthropometric_data!="None" & country!="USA" & country!="NLD") %>% 
+  subset(., select=-c(alternate_id, status, grant_folder,  analysis_folder, study_type, date_data_recd,
+                      study_url, pi_name, pi_contact_info, mou_counterparty,  dm_contact_information,  phi_present, data_accepted,
+                      scope_of_data, data_restrictions, kikm_uri,  notes, studyid, hasdata, fstudy_id,
+                      HAZsd.1, variables,
+                      subject_count,	age_lower_limit,	units_for_age_lo,	age_upper_limit,	units_for_age_up))
+dim(df2)
 
-d <- df[!is.na(df$variables),]
-write.csv(d,"U:/results/MLED_PRVD_metadata_stunting.csv")
 
-
-
-
-
-
+library(xlsx)
+write.xlsx(df2, "U:/results/Metadata/GHAP_metadata_stunting.xlsx")
 
 
 
