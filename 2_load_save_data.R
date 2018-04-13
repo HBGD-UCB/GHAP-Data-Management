@@ -230,6 +230,12 @@ saveRDS(d, file="svta.rds")
 rm(d) 
 
 
+d<-use_study("vita")
+colnames(d)<- toupper(colnames(d))
+saveRDS(d, file="vita_raw.rds")
+d <- impute_static_vars(d)
+saveRDS(d, file="vita.rds")
+rm(d) 
 
 d<-use_study("Vitamin-B12")
 colnames(d)<- toupper(colnames(d))

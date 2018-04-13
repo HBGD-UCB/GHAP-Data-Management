@@ -16,20 +16,24 @@
 #devtools::install_github("HBGDki/ghap")
 
 library(ghap)
-
+library(xlsx)
 
 set_git_base_path("U:/git")
 get_git_base_path()
 
-#studies <- get_study_list()
+studies <- get_study_list()
+studies<-as.data.frame(studies)
+#write.xlsx(studies, "U:/results/GHAP_metadata_full.xlsx")
+
 
 astudies <- get_study_list_anthro()
 astudies<-as.data.frame(astudies)
+#write.xlsx(astudies, "U:/results/GHAP_metadata.xlsx")
+
+
 
 head(astudies)
 
-d <- use_study("mlex")
-head(d)
 
 
 

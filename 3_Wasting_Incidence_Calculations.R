@@ -17,6 +17,17 @@ source("Wast_incidence_functions.R")
 
 setwd("U:/data")
 
+d<-readRDS("svta.rds")
+svta_inc<-WastIncCalc(d)
+svta_inc_table <- WastIncTable(svta_inc)
+save(svta_inc, svta_inc_table, file="WastIncDatasets/svta_inc.Rdata")
+
+d<-readRDS("vita.rds")
+vita_inc<-WastIncCalc(d)
+vita_inc_table <- WastIncTable(vita_inc)
+save(vita_inc, vita_inc_table, file="WastIncDatasets/vita_inc.Rdata")
+
+
 d<-readRDS("vb12.rds")
 vb12_inc<-WastIncCalc(d)
 vb12_inc_table <- WastIncTable(vb12_inc)

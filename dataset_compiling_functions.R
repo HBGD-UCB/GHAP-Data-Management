@@ -531,6 +531,8 @@ compile_hbgdki_data <- function(age=24*30.25, agerange=c(12*30.25, 36*30.25), mi
   d<-bindGHAP(study="vita", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)
   d<-bindGHAP(study="vb12", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
   d<-bindGHAP(study="svta", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  d<-bindGHAP(study="prvd", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
+  d<-bindGHAP(study="dvds", varlist=vars, dynamicvars=dynvars, d=d,age=age, agerange=agerange, minage=minage, maxage=maxage, cum_inc=cum_inc, recoveryoutcome=recoveryoutcome ,rds=rds, long.data=long.data, suffix=suffix, filesuffix=filesuffix, noBW=noBW)      
   
   
   
@@ -1234,11 +1236,16 @@ clean_covariates_hbgdki <- function(d){
   
   d$tr[d$ARM=="Food supplementation"  | d$ARM=="WSB++" ] <- "Other" #Complementary feeding interventions
   
+  d$tr[d$ARM=="Rotarix + No IPV (175)"  | d$ARM=="Rotarix + With IPV Boost (175)" ] <- "Other" #enteric vaccine
+  
+  
   #Control arms: No intervention, the standard of care in the study region (i.e. maternal iron and folate supplementation), or the intervention arm presented as the control in the trial design. If the intervention is factorial in design (i.e. iLiNS Zinc), the control arm will be chosen to isolate the effect of the intervention type (so in iLiNS Zinc, arms receiving LNS and Zinc will be compared to the LNS-only arm rather than the control arm).
   d$tr[d$ARM=="Control" | d$ARM=="Control (no Zinc)" | d$ARM=="Standard(Control)" | d$ARM=="No intervention" | d$ARM=="Placebo" | d$ARM=="Passive Control" | d$ARM=="no zinc, no copper" 
-       | d$ARM=="Iron and folic acid supplementation" | d$ARM=="e.Control" | d$ARM=="Likuni Phala" | d$ARM=="WPC" | d$ARM== "CFC"  | d$ARM=="Placebo nippled + Placebo Oval" | d$ARM=="Iron Folic Acid"] <- "C"
+       | d$ARM=="Iron and folic acid supplementation" | d$ARM=="e.Control" | d$ARM=="Likuni Phala" | d$ARM=="WPC" | d$ARM== "CFC"  | d$ARM=="Placebo nippled + Placebo Oval" | d$ARM=="Iron Folic Acid" |
+         d$ARM=="No Rotarix + No IPV (175)" | d$ARM=="No Rotarix + With IPV Boost (175)" ] <- "C"
   
   d$tr <- factor(d$tr)
+  
   
   
   
@@ -1333,8 +1340,7 @@ clean_covariates_hbgdki <- function(d){
     "region"))]
   
   
-  # Impute missing data with cohort-specific medians and make flagged indicators for missing values
-  #library(ck37r)
+
   
   d$birthorder <- factor(d$birthorder)
   d$SOAP <- factor(d$SOAP)
