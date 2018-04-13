@@ -5,6 +5,19 @@
 library(haven)
 
 
+setwd("U:/git/hbgd/ki1017093c/NIH-Crypto-201707/raw")
+d<-read_sas("baseline.sas7bdat")
+head(d)
+
+
+library(ghap)
+df<-use_study("ncry")
+
+
+df<-use_study("irc")
+colnames(df)
+
+
 setwd("U:/git/hbgd/ki1000108/PMC3894229/raw")
 d<-read_sas("baseline.sas7bdat")
 head(d)
