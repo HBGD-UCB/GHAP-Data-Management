@@ -33,8 +33,7 @@ agecat_rownames=NULL
 washout=60
 
 test<- WastIncCalc(d,washout=60)
-test2<-WastIncTable(test,
-                    strat=T)
+test2<-WastIncTable(test)
 
 
 #Set study size

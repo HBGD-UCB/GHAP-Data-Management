@@ -272,7 +272,7 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   d <- subset(d, select = -c(sum_wast_inc,sum_wast_rec))
   #Make sure there isn't double recovery
   #Indicate length of incident episodes
-  d$wasting_episode <- rep(NA, N)
+  d$wasting_episode <- rep(NA, nrow(d))
   d$wasting_episode[d$wast_inc==1] <- "Wasted"
   d$wasting_episode[d$wast_rec_inc==1] <- "Not Wasted"
   
