@@ -41,6 +41,25 @@ library(zoo)
 
 
 #----------------------------------------------
+# mutate_if functions
+#----------------------------------------------
+
+# from: https://github.com/tidyverse/dplyr/issues/942
+
+mutate_if <- function(data, condition, ...) {
+condition <- lazyeval::lazy(condition)
+args <- lazyeval::lazy_dots(...)
+mutate_if_(data, condition, .dots = args)
+}
+mutate_if_ <- function(data, condition, ..., .dots = list(...)) {
+condition <- lazyeval::lazy_eval(condition, data)
+data1 <- dplyr::filter(data, !condition)
+data2 <- dplyr::filter(data, condition)
+data2 <- dplyr::mutate_(data2, ..., .dots = .dots)
+dplyr::bind_rows(data1, data2)
+}
+
+#----------------------------------------------
 #create functions for rolling sum windows 
 #----------------------------------------------
 
@@ -279,12 +298,21 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   
   #Have to mark first observations as wasted or not wasted if dropBornWasted=F
   if(dropBornWasted==F){
-    d <- d %>% group_by(SUBJID) %>% 
-      mutate(wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==0, "Not Wasted", wasting_episode),
-             wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==1, "Wasted", wasting_episode),
+    
+    d <- d %>% group_by(SUBJID) %>%
+      mutate(wasting_episode = case_when(AGEDAYS==min(AGEDAYS) & wast==0 ~ "Not Wasted", 
+                                         AGEDAYS==min(AGEDAYS) & wast==1 ~ "Wasted", 
+                                         AGEDAYS!=min(AGEDAYS) ~ wasting_episode),
              born_wast_inc= 0,
-             wasting_episode = na.locf(wasting_episode, fromLast=F)) %>% #Last observation carried forward 
+             wasting_episode = na.locf(wasting_episode, fromLast=F)) %>% #Last observation carried forward
       ungroup()
+    
+    # d <- d %>% group_by(SUBJID) %>% 
+    #   mutate(wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==0, "Not Wasted", wasting_episode),
+    #          wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==1, "Wasted", wasting_episode),
+    #          born_wast_inc= 0,
+    #          wasting_episode = na.locf(wasting_episode, fromLast=F)) %>% #Last observation carried forward 
+    #   ungroup()
   }else{
     d <- d %>% group_by(SUBJID) %>% 
       mutate(wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==0, "Not Wasted", wasting_episode),
