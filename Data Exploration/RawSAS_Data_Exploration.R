@@ -3,14 +3,22 @@
 
 
 library(haven)
-
-
-setwd("U:/git/hbgd/ki1017093c/NIH-Crypto-201707/raw")
-d<-read_sas("baseline.sas7bdat")
-head(d)
-
-
 library(ghap)
+
+astudies<-get_study_list_anthro()
+astudies$data_path[astudies$short_id=="mlex" & !is.na(astudies$short_id)]
+
+setwd("U:/data/MALED-201707")
+
+
+d<-use_study("mlex")
+d<-readRDS("U:/data/mled.rds")
+colnames(d)
+
+
+list.files()
+
+#---------------------------------------
 df<-use_study("ncry")
 
 
