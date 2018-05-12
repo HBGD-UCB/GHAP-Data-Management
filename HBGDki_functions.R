@@ -843,3 +843,88 @@ poissonRB <- function(fmla,dat,print=TRUE) {
 
 
 
+# --------------------------------------
+# function to prescreen covariates and 
+# select 1 covariate per 10 cases
+# --------------------------------------
+
+hbgdki_prescreen <- function (Y, Ws, ncases, family = "binomial", pval = 0.2,  print = TRUE){
+  
+   n<-nrow(Ws)
+   if(n-ncases < ncases){ncases<-n-ncases}  
+  
+    require(lmtest)
+    if(family[[1]]=="neg.binom"){
+       require(MASS)
+    }
+    if(pval > 0.99 | pval < 0){
+        stop("P-value threshold not set between 0 and 1.")
+    }
+    Ws <- as.data.frame(Ws)
+    dat <- data.frame(Ws, Y)
+    dat <- dat[complete.cases(dat), ]
+    nW <- ncol(Ws)
+    LRp <- matrix(rep(NA, nW), nrow = nW, ncol = 1)
+    rownames(LRp) <- names(Ws)
+    colnames(LRp) <- "P-value"
+    if(family[[1]] != "neg.binom"){
+        for(i in 1:nW) {
+            dat$W <- dat[, i]
+            if(class(dat$W) == "factor" & dim(table(dat$W)) == 
+                1) {
+                fit1 <- fit0 <- glm(Y ~ 1, data = dat, family = family)
+            }
+            else{
+                fit1 <- glm(Y ~ W, data = dat, family = family)
+                fit0 <- glm(Y ~ 1, data = dat, family = family)
+            }
+            LRp[i] <- lrtest(fit1, fit0)[2, 5]
+        }
+    }
+    else{
+        if(!requireNamespace("MASS", quietly = TRUE)){
+            stop("Pkg needed forthis function to work. Please install it.", 
+                call. = FALSE)
+        }
+        else{
+            for(i in 1:nW){
+                dat$W <- dat[, i]
+                if(class(dat$W) == "factor" & dim(table(dat$W)) == 
+                  1) {
+                  fit1 <- fit0 <- glm(Y ~ 1, data = dat, family = family)
+                }
+                else{
+                  fit1 <- glm.nb(Y ~ W, data = dat, family = family)
+                  fit0 <- glm.nb(Y ~ 1, data = dat, family = family)
+                }
+                LRp[i] <- lrtest(fit1, fit0)[2, 5]
+            }
+        }
+    }
+    p20 <- ifelse(LRp < pval, 1, 0)
+    if(print == TRUE) {
+        cat("\nLikelihood Ratio Test P-values:\n")
+        print(round(LRp, 5))
+        if(sum(p20) > 0) {
+            LRps <- matrix(LRp[p20 == 1, ], ncol = 1)
+            rownames(LRps) <- names(Ws)[p20 == 1]
+            colnames(LRps) <- "P-value"
+            cat(paste("\n\nCovariates selected (P<", pval, "):\n", 
+                sep = ""))
+            print(LRps)
+        }
+        else{
+            cat(paste("\nNo covariates were associated with the outcome at P<", 
+                pval))
+        }
+    }
+    
+    W <- data.frame(wvar=names(Ws), p=as.numeric(LRp), pthres=as.numeric(p20))
+    if(floor(ncases/10) > 0){
+    W <- W %>% arrange(p) %>% slice(1:floor(ncases/10))
+    }else{
+      W$pthres = 0
+      cat("\nNot enough cases for adjusted analysis")
+    }
+    return(as.character(W$wvar[W$pthres == 1]))
+}
