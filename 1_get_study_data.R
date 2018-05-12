@@ -21,8 +21,8 @@ library(xlsx)
 set_git_base_path("U:/git")
 get_git_base_path()
 
-studies <- get_study_list()
-studies<-as.data.frame(studies)
+# studies <- get_study_list()
+# studies<-as.data.frame(studies)
 #write.xlsx(studies, "U:/results/GHAP_metadata_full.xlsx")
 
 
