@@ -48,6 +48,7 @@ design_matrix<-function (W)
     else {
       flist <- c(flist, i)
       W[, i] <- factor(W[, i])
+      W[,i] <- addNA(W[,i])
       mm <- model.matrix(~-1 + W[, i])
       mW <- mm[, -c(1)]
       levs <- gsub(" ", "", levels(W[, i]))[-c(1)]
