@@ -23,11 +23,10 @@ library(zoo)
 # d<-data.frame(SUBJID,AGEDAYS,WHZ)
 # d<-d %>% arrange(SUBJID,AGEDAYS)
 # 
+# 
 # agecats=c(6*30, 12*30, 18*30, 24*30)
 #   d$agecat <- as.factor(findInterval(d$AGEDAYS, agecats, rightmost.closed=F))
 # table(d$agecat)
-
-
 # strat=T
 # agecats=c(6*30, 12*30, 18*30, 24*30)
 # agecat_rownames=NULL
@@ -135,8 +134,8 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   require(zoo)  
   
   #Filter out extreme or missing whz values
-  d <- d %>%  filter(!is.na(WHZ)) %>%
-    filter(WHZ > (-5) & WHZ < 5)
+  # d <- d %>%  filter(!is.na(WHZ)) %>%
+  #   filter(WHZ > (-5) & WHZ < 5)
   
   #Remove duplicate ages
   ndropped <- nrow(d[duplicated(cbind(d$SUBJID, d$AGEDAYS)), ])
@@ -171,15 +170,19 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
       sevwastlag=lag(sevwast),
       midpoint_age = AGEDAYS - (AGEDAYS - agelag)/2,
       wastchange = wast - lag(wast),
-      sevwastchange = sevwast - lag(sevwast)
+      sevwastchange = sevwast - lag(sevwast),
+      delta_age = AGEDAYS-agelag,
+      firstmeasure = AGEDAYS==min(AGEDAYS)
     ) %>%
     as.data.frame()
-  d$agelag[is.na(d$agelag)] <- 0
-  d$wastlag[is.na(d$wastlag)] <- 0
-  d$sevwastlag[is.na(d$sevwastlag)] <- 0
-  d$wastchange[is.na(d$wastchange)] <- d$wast[is.na(d$wastchange)]
-  d$sevwastchange[is.na(d$sevwastchange)] <- d$sevwast[is.na(d$sevwastchange)]
+  
+  d$agelag[d$firstmeasure] <- 0
+  d$wastlag[d$firstmeasure] <- 0
+  d$sevwastlag[d$firstmeasure] <- 0
+  d$wastchange[d$firstmeasure] <- d$wast[d$firstmeasure]
+  d$sevwastchange[d$firstmeasure] <- d$sevwast[d$firstmeasure]
   d$midpoint_age[is.na(d$midpoint_age)] <- d$AGEDAYS[is.na(d$midpoint_age)]/2
+  d$delta_age[d$firstmeasure] <-d$AGEDAYS[d$firstmeasure]
   
   #Length of each observation period
   d <- d %>% group_by(SUBJID) %>% 
@@ -307,7 +310,8 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   
   
   d_episode <- d %>% 
-    subset(., select=c(SUBJID, episode_ID, incident_age)) %>%
+    subset(., select=c(SUBJID,
+                       episode_ID, incident_age)) %>%
     group_by(SUBJID, episode_ID) %>%
     slice(1) %>% ungroup() %>% group_by(SUBJID) %>%
     mutate(duration=lead(incident_age)-incident_age) %>%
@@ -454,10 +458,32 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
     if(min(d$days_lead_i, na.rm=T) > 90) break
   }
   
+  
+  # Mark person-time contributions to each outcome
+  # d$pt_wastrisk <- d$pt_sevwastrisk <- d$pt_wastec <-  d$pt_sevwastrec <- d$delta_age
+  #   
+  # d$pt_wastrisk[d$wast_inc==1] <- d$pt_wastrisk[d$wast_inc==1]/2
+  # d$pt_sevwastrisk[d$sevwast_inc==1] <- d$pt_sevwastrisk[d$sevwast_inc==1]/2
+  # d$pt_wastec[d$wast_rec_inc==1] <- d$pt_wastec[d$wast_rec_inc==1]/2
+  # d$pt_sevwastrec[d$sevwast_rec_inc==1] <- d$pt_sevwastrec[d$sevwast_rec_inc==1] /2 
+  
+  d$incident_time_into_period <- d$delta_age/2
+  
+  #calculate person time for each incidence outcome
+  d$pt_wast <- d$delta_age * d$wast_risk - d$incident_time_into_period * d$wast_inc
+  d$pt_sevwast <- d$delta_age * d$sevwast_risk - d$incident_time_into_period * d$sevwast_inc
+  d$pt_wast_rec <- d$delta_age * d$wast_rec_risk - d$incident_time_into_period * d$wast_rec_inc
+  d$pt_sevwast_rec <- d$delta_age * d$sevwast_rec_risk - d$incident_time_into_period * d$sevwast_rec_inc
+  
+  # df <- d %>% subset(., select=c(SUBJID, AGEDAYS,  wast_inc, wast_rec_inc,
+  #                                  wast_risk, sevwast_risk, wast_rec_risk,
+  #                                  delta_age, incident_time_into_period, pt_wastrisk, pt_wastec ))
+   
   #Drop intermediate variables
   d <- subset(d, select = -c(agelag, wastlag, sevwastlag, midpoint_age, wastchange, sevwastchange, past_wast, past_sevwast,
                              future_wast, future_sevwast,  sevwast_falter, sevwasting_episode_lag, sev_incident_age, sev_maxage,
-                             sevduration, rec_inc_lead_i, sev_inc_lead_i, days_lead_i, period_30d,period_60d,period_90d, next_midpoint
+                             sevduration, rec_inc_lead_i, sev_inc_lead_i, days_lead_i, period_30d,period_60d,period_90d, next_midpoint,
+                             incident_time_into_period, delta_age
   )) %>%
     ungroup() %>% as.data.frame()
   if(dropBornWasted==T){
@@ -483,7 +509,7 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
 #Function to calculate summary tables
 #----------------------------------------------
 
-WastIncTable<-function(d, strat=T, agecats=c(6*30, 12*30, 18*30, 24*30), agecat_rownames=c("0-6 months","6-12 months", "12-18 months", "18-24 months")){
+WastIncTable<-function(d, strat=T, agecats=c(6*30.4167, 12*30.4167, 18*30.4167, 24*30.4167), agecat_rownames=c("0-6 months","6-12 months", "12-18 months", "18-24 months")){
   
   
   if(strat==T){
@@ -528,8 +554,7 @@ WastIncTable<-function(d, strat=T, agecats=c(6*30, 12*30, 18*30, 24*30), agecat_
   
   return(list(tab1=tf[[1]], tab2=tf[[2]], tab3=tf[[3]], tab=tf[[4]], means=means))
   
-  
-  
+
 }
 
 
@@ -557,10 +582,14 @@ WastIncSummary<-function(d, strat=F){
       prev_sevwast= mean(WHZ < -3, na.rm=T) * 100,
       anywast= ifelse(sum(wast) > 0 ,1,0) * 100,
       anysevwast= ifelse(sum(sevwast) > 0 ,1,0) * 100,
-      persontime=sum(wast_risk*period_length, na.rm=T),
-      sev_persontime=sum(sevwast_risk*period_length, na.rm=T),
-      recovery_persontime=sum(wast_rec_risk*period_length, na.rm=T),
-      sevrecovery_persontime=sum(sevwast_risk*period_length, na.rm=T),
+      # persontime=sum(wast_risk*pt_wastrisk, na.rm=T),
+      # sev_persontime=sum(sevwast_risk*pt_sevwastrisk, na.rm=T),
+      # recovery_persontime=sum(wast_rec_risk*pt_wastrec, na.rm=T),
+      # sevrecovery_persontime=sum(sevwast_risk*pt_sevwastrec, na.rm=T),
+      persontime=sum(pt_wast, na.rm=T),
+      sev_persontime=sum(pt_sevwast, na.rm=T),
+      recovery_persontime=sum(pt_wast_rec, na.rm=T),
+      sevrecovery_persontime=sum(pt_sevwast_rec, na.rm=T),
       wast_ep=sum(wast_inc, na.rm=T),
       sevwast_ep=sum(sevwast_inc, na.rm=T),
       wast_rec_ep=sum(wast_rec, na.rm=T),
@@ -582,12 +611,12 @@ WastIncSummary<-function(d, strat=F){
              sevwastIR=sevwast_ep/sev_persontime * 1000,
              wastrecIR=wast_rec_ep/recovery_persontime * 1000,
              sevwastrecIR=sevwast_rec_ep/sevrecovery_persontime * 1000,
-             perc_wastrec_30d= sum(recoveries30d)/sum(no_recoveries30d)*100,
-             perc_wastrec_60d= sum(recoveries60d)/sum(no_recoveries60d)*100,
-             perc_wastrec_90d= sum(recoveries90d)/sum(no_recoveries90d)*100,
-             perc_sevwastinc_30d= sum(sevwast30d)/sum(no_sevwast30d)*100,
-             perc_sevwastinc_60d= sum(sevwast60d)/sum(no_sevwast60d)*100,
-             perc_sevwastinc_90d= sum(sevwast90d)/sum(no_sevwast90d)*100
+             perc_wastrec_30d= sum(recoveries30d)/(sum(recoveries30d)+sum(no_recoveries30d))*100,
+             perc_wastrec_60d= sum(recoveries60d)/(sum(recoveries60d)+sum(no_recoveries60d))*100,
+             perc_wastrec_90d= sum(recoveries90d)/(sum(recoveries90d)+sum(no_recoveries90d))*100,
+             perc_sevwastinc_30d= sum(sevwast30d)/(sum(sevwast30d)+sum(no_sevwast30d)*100),
+             perc_sevwastinc_60d= sum(sevwast60d)/(sum(sevwast60d)+sum(no_sevwast60d)*100),
+             perc_sevwastinc_90d= sum(sevwast90d)/(sum(sevwast90d)+sum(no_sevwast90d)*100)
     ) %>%
     as.data.frame()
   
@@ -608,7 +637,7 @@ WastIncSummary<-function(d, strat=F){
   #  subset(., select=c(SUBJID,agecat,wast_dur)) %>% 
   #  as.data.frame()
   
-  episode_duration <- d %>% 
+  episode_duration <- d %>% ungroup() %>%
     filter(wast_inc==1) %>% #drop non-wasting periods
     subset(., select=c(SUBJID,agecat,wasting_duration)) %>% 
     as.data.frame()
@@ -621,9 +650,9 @@ WastIncSummary<-function(d, strat=F){
     )
 
   #Average episode length
-  average_duration=mean(episode_duration$wasting_duration)
+  average_duration=mean(episode_duration$wasting_duration, na.rm=T)
   #average total time wasted for each child
-  total_duration=mean(duration$total_duration)
+  total_duration=mean(duration$total_duration, na.rm=T)
   
   #if(strat==T){
   #  duration_strat_average_duration <- episode_duration %>% group_by(agecat) %>% 
