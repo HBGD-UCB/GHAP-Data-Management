@@ -41,22 +41,28 @@ library(zoo)
 
 
 #----------------------------------------------
-# mutate_if functions
+# markt the start of wasted of not wasted episodes 
 #----------------------------------------------
 
-# from: https://github.com/tidyverse/dplyr/issues/942
+mark_episodes <- function(d){
 
-mutate_if <- function(data, condition, ...) {
-condition <- lazyeval::lazy(condition)
-args <- lazyeval::lazy_dots(...)
-mutate_if_(data, condition, .dots = args)
+  d$wasting_episode = ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$wast==0, "Not Wasted", d$wasting_episode)
+  d$wasting_episode = ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$wast==1, "Wasted", d$wasting_episode)
+  d$born_wast_inc= 0
+  d$wasting_episode = na.locf(d$wasting_episode, fromLast=F)#Last observation carried forward
+
+  return(d)
 }
-mutate_if_ <- function(data, condition, ..., .dots = list(...)) {
-condition <- lazyeval::lazy_eval(condition, data)
-data1 <- dplyr::filter(data, !condition)
-data2 <- dplyr::filter(data, condition)
-data2 <- dplyr::mutate_(data2, ..., .dots = .dots)
-dplyr::bind_rows(data1, data2)
+
+mark_episodes <- function(d){
+  
+  d$born_sevwast_inc= ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$sevwast==1,1,0)
+  d$sevwasting_episode = ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$sevwast==0, "Not Severe Wasted", d$sevwasting_episode)
+  d$sevwasting_episode = ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$sevwast==1, "Born Severe Wasted", d$sevwasting_episode)
+  d$sevwasting_episode = na.locf(d$sevwasting_episode, fromLast=F)
+  d$sevwasting_episode_lag=lag(d$sevwasting_episode)
+
+return(d)
 }
 
 #----------------------------------------------
@@ -296,16 +302,13 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   d$wasting_episode[d$wast_rec_inc==1] <- "Not Wasted"
   
   
+  d <- d %>% group_by(SUBJID) %>%  arrange(AGEDAYS)
+  
   #Have to mark first observations as wasted or not wasted if dropBornWasted=F
   if(dropBornWasted==F){
     
     d <- d %>% group_by(SUBJID) %>%
-      mutate(wasting_episode = case_when(AGEDAYS==min(AGEDAYS) & wast==0 ~ "Not Wasted", 
-                                         AGEDAYS==min(AGEDAYS) & wast==1 ~ "Wasted", 
-                                         AGEDAYS!=min(AGEDAYS) ~ wasting_episode),
-             born_wast_inc= 0,
-             wasting_episode = na.locf(wasting_episode, fromLast=F)) %>% #Last observation carried forward
-      ungroup()
+      do(mark_episodes(.))
     
     # d <- d %>% group_by(SUBJID) %>% 
     #   mutate(wasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & wast==0, "Not Wasted", wasting_episode),
@@ -373,16 +376,21 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   d$sevwasting_episode[d$sevwast_falter==1] <- "Severe Wasted"
   d$sevwasting_episode[d$wast_rec_inc==1] <- "Not Severe Wasted"
   
+  
   #Have to mark first observations as wasted or not wasted if dropBornWasted=F
   if(dropBornWasted==T){
-    d <- d %>% group_by(SUBJID) %>% 
-      mutate(
-        born_sevwast_inc= ifelse(AGEDAYS==min(AGEDAYS) & sevwast==1,1,0),
-        sevwasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & sevwast==0, "Not Severe Wasted", sevwasting_episode),
-        sevwasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & sevwast==1, "Born Severe Wasted", sevwasting_episode),
-        sevwasting_episode = na.locf(sevwasting_episode, fromLast=F),
-        sevwasting_episode_lag=lag(sevwasting_episode)) %>% #Last observation carried forward 
-      ungroup()      
+    
+    d <- d %>% group_by(SUBJID) %>%
+      do(mark_sevepisodes(.))
+    
+    # d <- d %>% group_by(SUBJID) %>% 
+    #   mutate(
+    #     born_sevwast_inc= ifelse(AGEDAYS==min(AGEDAYS) & sevwast==1,1,0),
+    #     sevwasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & sevwast==0, "Not Severe Wasted", sevwasting_episode),
+    #     sevwasting_episode = ifelse(AGEDAYS==min(AGEDAYS) & sevwast==1, "Born Severe Wasted", sevwasting_episode),
+    #     sevwasting_episode = na.locf(sevwasting_episode, fromLast=F),
+    #     sevwasting_episode_lag=lag(sevwasting_episode)) %>% #Last observation carried forward 
+    #   ungroup()      
   }else{
     d <- d %>% group_by(SUBJID) %>% 
       mutate(
