@@ -54,7 +54,7 @@ mark_episodes <- function(d){
   return(d)
 }
 
-mark_episodes <- function(d){
+mark_sevepisodes <- function(d){
   
   d$born_sevwast_inc= ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$sevwast==1,1,0)
   d$sevwasting_episode = ifelse(d$AGEDAYS==min(d$AGEDAYS) & d$sevwast==0, "Not Severe Wasted", d$sevwasting_episode)
@@ -159,8 +159,8 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   require(zoo)  
   
   #Filter out extreme or missing whz values
-  # d <- d %>%  filter(!is.na(WHZ)) %>%
-  #   filter(WHZ > (-5) & WHZ < 5)
+  d <- d %>%  filter(!is.na(WHZ)) %>%
+    filter(WHZ > (-5) & WHZ < 5)
   
   #Remove duplicate ages
   ndropped <- nrow(d[duplicated(cbind(d$SUBJID, d$AGEDAYS)), ])
@@ -339,7 +339,8 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
     mutate(incident_age = min(midpoint_age),
            maxage=max(AGEDAYS))
   
-  
+  #Calculate duration for each episode
+  #Note: this code implicitly censors the final epsiode as the lead(incident_age) will be NA
   d_episode <- d %>% 
     subset(., select=c(SUBJID,
                        episode_ID, incident_age)) %>%
@@ -350,17 +351,15 @@ WastIncCalc<-function(d, washout=60, dropBornWasted=F){
   
   d <- left_join(d, d_episode, by=c("SUBJID","episode_ID"))
   
-  #Set duration of any censored episode to NA
-  d <- d %>% group_by(SUBJID) %>%
-    mutate(duration = ifelse(maxage==max(maxage), NA, duration)) %>% 
-    ungroup()
-  
+
   
   #Variable for duration of only wasting episodes
   d$wasting_duration <- NA
   d$wasting_duration[d$wasting_episode=="Wasted"] <- d$duration[d$wasting_episode=="Wasted"]
   
-  
+  #View duration calculations
+  # df <- d %>% subset(., select=c(SUBJID, AGEDAYS, WHZ, wast_rec_inc, wasting_episode, episode_ID, duration))
+  # View(df)
   
   #---------------------------------------------------------
   #Calculate severe wasting and severe wasting recovery incidence and risk
@@ -657,38 +656,22 @@ WastIncSummary<-function(d, strat=F){
     as.data.frame()
   
   #Calculate average episode lengths
-  #d <- d %>% group_by(SUBJID) %>%
-  #  mutate(state_run = cumsum( wast_inc+sevwast_inc+wast_rec) + 1,
-  #         wast_run = ifelse(wast==1, state_run, 0)) %>%
-  #  ungroup() %>%  group_by(SUBJID, state_run) %>% 
-  #  mutate(state_dur = sum(period_length),
-  #         wast_dur = ifelse(wast==1, state_dur, 0)) %>%
-  #  as.data.frame()
-  
-  #data frame of episode durations
-  #episode_duration <- d %>% 
-  #  filter(wast_inc==1) %>% #drop non-wasting periods
-  #  group_by(SUBJID, state_run ) %>%
-  #  slice(1) %>% ungroup() %>% 
-  #  subset(., select=c(SUBJID,agecat,wast_dur)) %>% 
-  #  as.data.frame()
-  
   episode_duration <- d %>% ungroup() %>%
     filter(wast_inc==1) %>% #drop non-wasting periods
     subset(., select=c(SUBJID,agecat,wasting_duration)) %>% 
     as.data.frame()
   
-  # #Calculate mean, max, and total duration of wasting per child
+  # #Calculate mean total duration of wasting per child
+  # note that this is among all children, not just kids who
+  # experience wasting, so kids who are never wasted have duration
+  # of 0, not NA.
   duration <- episode_duration %>%
     group_by(SUBJID) %>%
     summarize(
       total_duration= sum(wasting_duration, na.rm=T)
     )
 
-  #Average episode length
-  average_duration=mean(episode_duration$wasting_duration, na.rm=T)
-  #average total time wasted for each child
-  total_duration=mean(duration$total_duration, na.rm=T)
+
   
   #if(strat==T){
   #  duration_strat_average_duration <- episode_duration %>% group_by(agecat) %>% 
