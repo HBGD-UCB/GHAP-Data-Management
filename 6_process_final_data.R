@@ -1,5 +1,4 @@
-
-
+#Add instructions for downloading FINAL dataset
 
 
 rm(list=ls())
@@ -13,19 +12,21 @@ setwd("U:/data")
 gc()
 
 
+
 #Read rds file and drop unneeded columns
 d<-fread("U:/data/FINAL/UCB Rally7/Main/adam/FINAL.csv", header = T,
-         drop = c("AGEDAYS", "AGEIMPFL","MONTH",   "WTKG",    "HTCM",    "LENCM",   "WAZ",     "HAZ",  
-                  "WHZ",     "BAZ",     "HCAZ",    "MUAZ",    "SITEID", 
+         drop = c( "AGEIMPFL","MONTH",   "WTKG",    "HTCM",    "LENCM",   "WAZ",      
+                  "WHZ",     "BAZ",     "HCAZ",    "MUAZ",    
                   "REGCTRY", "REGCTYP", "CITYTOWN","LATITUDE","LONGITUD", "HHID",    "ARM", 
                   "DEAD",    "AGEDTH",  "CAUSEDTH","FEEDING",
-                  "DURBRST", "BRTHYR",  "BRTHWEEK","BRTHMON",
-                  "PARITY",  "BRTHORDR",
+                  "DURBRST", "BRTHYR",  
+                  "ENSTUNT",
+                  "FWTKG", "FBMI",
                   "BRFEED", 
                   "SUMEP",   "SUMDIAR", "SUMDAYS",
                   "PCTDIAR", "IMPSAN",  "SOAP",    "SAFEH2O", "TRTH2O",  "CLEANCK",
                   "IMPFLOOR","H2OTIME",
-                  "CHICKEN", "COW",     "CATTLE",  "SES",     "INCTOT", 
+                  "CHICKEN", "COW",     "CATTLE",  "INCTOT", 
                   "INCTOTU", "BFEDFL",  "EXBFEDFL","WEANFL",  "ANMLKFL", "PWMLKFL",
                   "FORMLKFL","BOTTLEFL","H20FEDFL","OTHFEDFL","SLDFEDFL","NBFYES",  "EARLYBF", "CMFDINT", "DIARFL",  "LSSTLFL",
                   "NUMLS",   "BLDSTLFL","DIARFL_R","LSSTFL_R","NUMLS_R", "BLDSTL_R",
@@ -87,31 +88,31 @@ d$measurefreq[d$studyid %in% c(
 
 #Keep monthly and quarterly studies
 d <- d %>% filter(measurefreq!="yearly")
+d <- d %>% subset(., select=-c(measurefreq))
+
 
 #Subset to control arms for intervention studies
+table(d$studyid, d$tr)
 d <- filter(d, tr=="Control" | tr=="")
 
 
-#Drop unneeded or unfinished variables
-# d <- subset(d, select = -c("agedays", "ageimpfl","month",   "wtkg",    "htcm",    "lencm",   "waz",     "haz",  
-#                            "whz",     "baz",     "hcaz",    "muaz",    "siteid", 
-#                            "regctry", "regctyp", "citytown","latitude","longitud","clustid", "hhid",    "arm", 
-#                            "tr", 
-#                            "dead",    "agedth",  "causedth","feeding",
-#                            "durbrst", "brthyr",  "brthweek","brthmon",
-#                            "parity",  "brthordr",
-#                            "brfeed", 
-#                            "sumep",   "sumdiar", "sumdays",
-#                            "pctdiar", "impsan",  "soap",    "safeh2o", "trth2o",  "cleanck",
-#                            "impfloor","h2otime",
-#                            "chicken", "cow",     "cattle",  "ses",     "inctot", 
-#                            "inctotu", "bfedfl",  "exbfedfl","weanfl",  "anmlkfl", "pwmlkfl",
-#                            "formlkfl","bottlefl","h20fedfl","othfedfl","sldfedfl","nbfyes",  "earlybf", "cmfdint", "diarfl",  "lsstlfl",
-#                            "numls",   "bldstlfl","diarfl_r","lsstfl_r","numls_r", "bldstl_r",
-#                            "dur_r",   "hfoodsec"))
+#Calculate stunting at enrollment
+d_enrol <- d %>% group_by(studyid, subjid) %>% 
+  arrange(agedays) %>% 
+  slice(1) %>% 
+  mutate(enstunt= as.numeric(haz < -2)) %>%
+  subset(., select=c(studyid, subjid, enstunt))
+
+d <- left_join(d, d_enrol, by=c("studyid", "subjid"))
+table(d$studyid, d$enstunt)
+
+
+
+
 
 #Keep one observation per child
-d <- d %>% group_by(studyid, country, subjid) %>% slice(1) 
+d <- d %>% group_by(studyid, country, subjid) %>% arrange(agedays) %>%  slice(1) 
+d <- d %>% subset(., select=-c(agedays, haz))
 
 
 #Replace "" with NA for categorical variables
@@ -219,9 +220,27 @@ d$id[!(d$studyid %in% c("ki1112895-iLiNS-Zinc",
                                                                                    "kiGH5241-JiVitA-4",
                                                                                    "ki1119695-PROBIT",
                                                                                    "ki1000304b-SAS-CompFeed"))]
+
+#PROBIT unit of randomization is the SITEID
+d$id[!(d$studyid %in% c("ki1119695-PROBIT"))] <- d$siteid[!(d$studyid %in% c("ki1119695-PROBIT"))] 
+
+#Guatemala cohort is cluster randomized
 d$id[d$studyid=="ki1135781-COHORTS" & d$country=="GUATEMALA"] <-d$clustid[d$studyid=="ki1135781-COHORTS" & d$country=="GUATEMALA"]
 
 table(is.na(d$id))
+table(d$studyid,is.na(d$id))
+
+#Check raw data of studies missing ID
+# df <- readRDS("U:/data/jvt3.rds")
+# colnames(df)
+# 
+# table(df$CITYTOWN, df$ARM)
+# ki1112895-iLiNS-Zinc         0   797
+# ki1119695-PROBIT             0  8181
+# ki1135781-COHORTS        19704   991
+# kiGH5241-JiVitA-3            0 13748
+
+
 
 #Create BMI/height/weight variables for those studies that have 2 of 3 variables
 

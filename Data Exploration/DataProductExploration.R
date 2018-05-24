@@ -1,6 +1,8 @@
 
 
 rm(list=ls())
+#install.packages('DataExplorer') 
+library(DataExplorer)
 library(tidyverse)
 library(data.table)
 library(xlsx)
@@ -31,6 +33,9 @@ d.old <- d
 
 #Read rds file
 d<- readRDS("FINAL.rds")
+
+
+
 
 #Check for duplicate agedays
 dup_age <- d %>% group_by(STUDYID, SUBJID, AGEDAYS) %>% summarize(N=n())
@@ -87,6 +92,8 @@ d<-as.data.frame(d)
 #   summarise(modeN=Mode(N)) %>%
 #   arrange(modeN) %>% as.data.frame()
 
+#Create simple exploratory data report 
+create_report(d)
 
 
 d <-d %>% filter(!is.na(AGEDAYS) & !is.na(WHZ)) %>%
@@ -96,6 +103,7 @@ d <-d %>% filter(!is.na(AGEDAYS) & !is.na(WHZ)) %>%
   arrange(AGEDAYS) %>%
   slice(1) %>% 
   ungroup
+
 
 
 #Drop un-needed columns
