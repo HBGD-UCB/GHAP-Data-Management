@@ -138,6 +138,7 @@ impute_static_vars<-function(d){
              "BAZM",
              "SMOKSTAT","SMOKYRS",
              "DIARFL",
+             "AGLAND", "BICYCLE", "ELEC", "FAN", "FRIG", "INCTOT", "MOBILE", "NROOMS", "RADIO", "TV", "WATCH", "CHAIR", "COMPUTER","MATTRESS", "SOFA", "TABLE", "BOOKS",
              #WBK variables
              "STUDYID", "SUBJID",  "CLUSTID", "SITEID",  "HHID",    "SEXN",    "SEX",     "ARMCD",   "ARM",     "STRATUMN","STRATUM",
              "COHORTN", "COHORT",  "BRTHYR",  "BRTHWEEK","MHTCM",   "MEDUCYRS","CTRYCD",  "COUNTRY", "BICYCLE", "CAR",     "CHICKEN",
@@ -359,7 +360,9 @@ rm(d)
 
 #d<-use_study("mal_ed") #Mal ED not loading
 #Temp fix
-d<-read.csv("U:/data/MALED-201501/adam/trellisdat.csv")
+##d<-read.csv("U:/data/MALED-201501/adam/trellisdat.csv")
+d<-read.csv("U:/git/hbgd/ki0047075b/MALED-201707/adam/full_ki0047075b_MALED_201707.csv")
+
 colnames(d)<- toupper(colnames(d))
 saveRDS(d, file="mled_raw.rds")
 d <- impute_static_vars(d)
