@@ -40,15 +40,7 @@ assetPCA<-function(dfull, varlist, reorder=F ){
   
   #Subset to only needed variables for subgroup analysis
   ret <- dfull %>%
-    subset(select=c(varlist))
-  
-  for(i in 1:ncol(ret)){
-    ret[,i]<-ifelse(ret[,i]=="",NA,ret[,i])
-  } 
-  
-  #drop rows with no asset data
-  ret<-ret[rowSums(is.na(ret[,4:ncol(ret)])) != ncol(ret)-3,]  
-  
+    subset(select=c(varlist)) 
   
   #PCA of asset based wealth by enrollment
   #Method based on: https://programming-r-pro-bro.blogspot.com/2011/10/principal-component-analysis-use.html
@@ -58,6 +50,16 @@ assetPCA<-function(dfull, varlist, reorder=F ){
   id<-subset(ret, select=c("STUDYID","SUBJID","COUNTRY")) #drop subjectid
   ret<-ret[,which(!(colnames(ret) %in% c("STUDYID","SUBJID","COUNTRY")))]
   
+  
+  for(i in 1:ncol(ret)){
+    ret[,i]<-ifelse(ret[,i]=="",NA,ret[,i])
+  } 
+  
+  #drop rows with no asset data
+  id<-id[rowSums(is.na(ret[,4:ncol(ret)])) != ncol(ret)-3,]  
+  ret<-ret[rowSums(is.na(ret[,4:ncol(ret)])) != ncol(ret)-3,]  
+  
+
   #Drop assets with great missingness
   for(i in 1:ncol(ret)){
     cat(colnames(ret)[i],"\n")
@@ -289,6 +291,19 @@ varlist<-colnames(d)[colnames(d) %in% c( "BEDNET", "BICYCLE", "CAR", "MATTRESS",
 d<-assetPCA(d, varlist, reorder=F)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
+
+#---------
+# mled
+#---------
+study<-"mled"
+d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% slice(1)
+#d<-read.csv("U:/git/hbgd/ki0047075b/MALED-201707/adam/full_ki0047075b_MALED_201707.csv")
+
+cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
+varlist<-colnames(d)[colnames(d) %in% c( "AGLAND", "BICYCLE", "ELEC", "FAN", "FRIG", "INCTOT", "MOBILE", "NROOMS", "RADIO", "TV", "WATCH", "CHAIR", "COMPUTER","MATTRESS", "SOFA", "TABLE", "BOOKS")]
+d<-assetPCA(d, varlist, reorder=F)
+saveRDS(d, file=paste0(study, '.HHwealth.rds') )
+
 #---------
 # nbrt -no assets
 #---------
@@ -422,6 +437,7 @@ saveRDS(d, file=paste0(study, '.HHwealth.rds') )
            "jvt3",
            "jvt4",
            "lcn5",
+           "mled",
            "prvd",
            "tzc2",
            "tdc",
