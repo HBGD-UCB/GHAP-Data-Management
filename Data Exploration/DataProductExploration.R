@@ -21,7 +21,7 @@ d.old <- d
 
 # #d<-read.csv("FINAL.csv")
 # setwd("U:/data")
-# d<-fread("U:/data/FINAL/UCB Rally7/Main/adam/FINAL.csv", header = T)
+ d<-fread("U:/data/FINAL/UCB Rally7/Main/adam/FINAL.csv", header = T)
 # 
 # dim(d)
 # head(d)
@@ -32,7 +32,7 @@ d.old <- d
 
 
 #Read rds file
-d<- readRDS("FINAL.rds")
+#d<- readRDS("FINAL.rds")
 
 
 

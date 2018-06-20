@@ -36,7 +36,11 @@ colnames(d) <- tolower(colnames(d))
 colnames(d)
 
 #Drop studies Vishak added to data product that don't meet inclusion criteria
-d <- d[studyid!="ki1000301-DIVIDS" & studyid!="ki1055867-WomenFirst" & studyid!="ki1135782-INCAP"]
+dim(d)
+d <- d[d$studyid!="ki1000301-DIVIDS" & d$studyid!="ki1055867-WomenFirst" & d$studyid!="ki1135782-INCAP",]
+dim(d)
+
+
 
 #mark measure frequencies
 d$measurefreq <- NA
@@ -84,6 +88,12 @@ d$measurefreq[d$studyid %in% c(
   "ki1000304-EU",        
   "ki1000304-ZnMort"
 )] <- "yearly"
+
+#Mark COHORTS and CMIN cohorts with different measurement frequency than quarterly
+d$measurefreq[d$studyid=="ki1114097-CMIN" & d$country=="BANGLADESH"] <- "monthly"
+d$measurefreq[d$studyid=="ki1114097-CMIN" & d$country=="PERU"] <- "monthly"
+d<- d[!(d$studyid=="ki1135781-COHORTS" & d$country=="BRAZIL"),] #Drop because yearly but not an RCT
+d<- d[!(d$studyid=="ki1135781-COHORTS" & d$country=="SOUTH AFRICA"),] #Drop because yearly but not an RCT
 
 
 #Keep monthly and quarterly studies
@@ -280,15 +290,16 @@ table(d$studyid, d$diarfl)
 table(d$studyid, d$diarfl_r)
 table(d$studyid, d$dur_r)
 
-#Replace diar flag with 1-dat recall from SAS studies
-d$diarfl[d$studyid=="ki1000304b-SAS-CompFeed"] <- d$diarfl_r[d$studyid=="ki1000304b-SAS-CompFeed"]
-d$diarfl[d$studyid=="ki1000304b-SAS-FoodSuppl"] <- d$diarfl_r[d$studyid=="ki1000304b-SAS-FoodSuppl"]
+#Replace diar flag with 1-day recall 
+d$diarfl[is.na(d$diarfl) & !is.na(d$diarfl_r) & d$dur_r==1] <- d$diarfl_r[is.na(d$diarfl) & !is.na(d$diarfl_r) & d$dur_r==1]
 
 #drop unneeded variables
 d <- d %>% subset(., select= -c(diarfl_r, dur_r))
 
 #Look for unrealistic diarrhea prevalences
 d %>% group_by(studyid) %>% summarize(mean(diarfl, na.rm=T)) %>% as.data.frame()
+
+table(d$studyid, d$diarfl)
 
 
 #Calculate cumulative percent days with diarrhea for each individual
@@ -298,6 +309,7 @@ d <- d %>% arrange(studyid, subjid, agedays) %>%
          numdays = cumsum(!is.na(diarfl)),
          pctdiar=numdiar/numdays * 100)
 
+d %>% group_by(studyid) %>% summarize(mean(pctdiar, na.rm=T)) %>% as.data.frame()
 
 
 #--------------------------------------------------------------------------
@@ -380,10 +392,6 @@ table(d$studyid, !is.na(d$birthlen))
 
 #gestational age at birth
 d %>% group_by(studyid) %>% do(as.data.frame(t(as.numeric(summary(.$gagebrth))))) %>% as.data.frame()
-
-#TEMP
-#drop ki1017093c-NIH-Crypto until it is fixed
-d$gagebrth[d$studyid=="ki1017093c-NIH-Crypto"] <-NA
 
 
 #Birthweight and length - look good
