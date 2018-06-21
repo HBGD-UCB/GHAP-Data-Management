@@ -36,7 +36,10 @@ d <- d[d$studyid!="ki1000301-DIVIDS" & d$studyid!="ki1055867-WomenFirst" & d$stu
 dim(d)
 
 #Replace diar flag with 1-day recall 
+table(dfull$studyid, !is.na(dfull$diarfl))
 d$diarfl[is.na(d$diarfl) & !is.na(d$diarfl_r) & d$dur_r==1] <- d$diarfl_r[is.na(d$diarfl) & !is.na(d$diarfl_r) & d$dur_r==1]
+table(dfull$studyid, !is.na(dfull$diarfl))
+
 
 #drop unneeded variables
 d <- d %>% subset(., select= -c(diarfl_r, dur_r))

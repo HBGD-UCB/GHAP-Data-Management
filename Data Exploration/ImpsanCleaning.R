@@ -1,4 +1,5 @@
 
+
 library("haven")
 library("dplyr")
 
@@ -29,6 +30,10 @@ load_san <- function(filepath, var=NULL){
   return(d)
 }
 
+
+
+# Create pooled sanitation dataframe
+dsan<-NULL
 
 
 #-------------------------------
@@ -79,6 +84,9 @@ d<-d[!is.na(d$subjid),]
 
 d <- subset(d, select = -c(subjido))
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ki1000107-Serrinha-VitA     
 #-------------------------------
@@ -111,6 +119,9 @@ d$impsan[d$sanitatn %in% missing] <- NA
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ki1000111-WASH-Kenya    
 #-------------------------------
@@ -118,7 +129,10 @@ table(d$impsan)
 d<-load_san("U:/data/wsk.rds", "imprlat")
 table(d$imprlat)
 
-d$impsan <- d$imprlat
+d$impsan <- as.numeric(d$imprlat)
+
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # ki1000125-AgaKhanUniv       
@@ -130,6 +144,8 @@ d$impsan<-ifelse(d$sanitatn=="Latrine with flush system", 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # ki1000304-VITAMIN-A        
@@ -140,6 +156,8 @@ d$impsan<-ifelse(d$sanitatn=="Flush latrine", 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
 #-------------------------------
 # ki1000304-ZnMort          
 #-------------------------------
@@ -149,6 +167,9 @@ d<-load_san("U:/data/zmrt.rds", "sanitatn")
 d$impsan<-ifelse(d$sanitatn=="Family owns toilet", 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # ki1000304b-SAS-FoodSuppl    
@@ -183,6 +204,9 @@ d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ki1017093b-PROVIDE        
 #-------------------------------
@@ -196,6 +220,9 @@ improved <- c("Septic tank or toilet",
 d$impsan<-ifelse(d$sanitatn %in% improved, 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # ki1017093c-NIH-Crypto      
@@ -212,16 +239,22 @@ d$impsan<-ifelse(d$sanitatn %in% improved, 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ki1112895-Burkina Faso Zn  
 #-------------------------------
 
 d<-load_san("U:/data/bfzn.rds", "sanitatn")
-d$impsan <- d$sanitatn
+d$impsan <- as.numeric(d$sanitatn)
 d$impsan[d$sanitatn==9] <- NA
 
 #Check raw data to see source of var
 #Variable is an indicator for improved sanitation
+
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # ki1114097-CONTENT            
@@ -245,6 +278,8 @@ improved <- c("Drain connected inside house","Outside Drain")
 d$impsan<-ifelse(d$sanitatn %in% improved, 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
 
 
 #-------------------------------
@@ -272,13 +307,20 @@ d$impsan[d$c3toilet==0] <- 0
 d$impsan[d$c3toilet==1 & d$delhi==1] <- 0
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ki1148112-iLiNS-DOSE       
 #-------------------------------
 
-d<-load_san("U:/data/ilnd.rds")
+d<-load_san("U:/data/ilnd.rds", "sanitatn")
 
-#Check raw data to  find var
+d$impsan <- ifelse(d$sanitatn=="Regular Pit Latrine",0,1)
+d$impsan[is.na(d$impsan)] <- NA
+table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
 
 
 #-------------------------------
@@ -287,12 +329,24 @@ d<-load_san("U:/data/ilnd.rds")
 
 d<-load_san("U:/data/ildm.rds", "sanitatn")
 
+#mostly missing from 
 
-#Check raw data to look for more data
+library(xlsx)
+df <- read.xlsx("U:/data/iLiNS-DYAD-M/import/export_form_13a_2016-01-19-1526.xlsx", sheetName="export_form_13a")
+table(df$SocSanitaryFac)
+table(df$SocSpecSanitary)
 
-d$impsan<-ifelse(d$sanitatn=="Vent. Impr. pit latrine", 1, 0)
-d$impsan[is.na(d$sanitatn)] <- NA
+df$impsan <- ifelse(df$SocSanitaryFac>1,1,0)
+df$impsan[is.na(df$SocSanitaryFac) | df$SocSanitaryFac==9] <- NA
+table(df$impsan)
+df <- df %>% rename(subjid=Participant) %>% mutate(subjid=subjid*10 +1) %>% select(subjid, impsan)
+
+d <- left_join(d, df, by="subjid")
 table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
+
+
 
 #-------------------------------
 # ki1148112-LCNI-5      
@@ -300,12 +354,14 @@ table(d$impsan)
 
 d<-load_san("U:/data/lcn5.rds", "sanitatn")
 
-#Check raw data to look for more data
 
 d$impsan<-ifelse(d$sanitatn=="Vent.impr.pit latrine", 1, 0)
 d$impsan[d$sanitatn=="Other"] <- NA
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
+
+dsan<-bind_rows(dsan, d)
+
 
 #-------------------------------
 # kiGH5241-JiVitA-3     
@@ -320,6 +376,9 @@ d$impsan<-ifelse(d$sanitatn %in% improved, 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # kiGH5241-JiVitA-4   
 #-------------------------------
@@ -333,20 +392,32 @@ d$impsan<-ifelse(d$sanitatn %in% improved, 1, 0)
 d$impsan[is.na(d$sanitatn)] <- NA
 table(d$impsan)
 
+dsan<-bind_rows(dsan, d)
+
+
 #-------------------------------
 # ilin-dyad-g 
 #-------------------------------
 
 
 
-d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/camf_long.sas7bdat")
-head(d)
-d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/namf.sas7bdat")
-head(d)
-d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/ws.sas7bdat")
-head(d)
+# d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/camf_long.sas7bdat")
+# head(d)
+# d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/namf.sas7bdat")
+# head(d)
+# d<-read_sas("U:/data/iLins-Dyad-G/iLiNS-DYAD-G-201804/import/ws.sas7bdat")
+# head(d)
 
 
 #No sanitation data
 
 
+#-------------------------------
+# examine full dataset
+#-------------------------------
+dsan$impsan[dsan$impsan==9] <- NA
+table(dsan$studyid, dsan$impsan)
+
+head(dsan)
+
+save(dsan, file="U:/data/improved_sanitation_dataset.Rdata")
