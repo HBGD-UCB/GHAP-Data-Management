@@ -7,6 +7,11 @@
 d<-read_sas("U:/data/MALED-201511/raw/bf_24m.sas7bdat")
 colnames(d)
 
+#cumexc: Cumulative days of exclusive breastfeeding from birth. This is a cumulative sum of the variable "excrun", i.e., number of days, to date from birth, that the child was reported to be exclusively breastfed. This has been filled in between birth and minage with EBF if child began breastfeeding at all (cafbegbf~=.). Exclusive breastfeeding prevalence can be calculated by dividing cumexc / age (or days of follow up). 
+#cumpred: Cumulative days of predominant breastfeeding (cumulative sum of predrun, i.e., number of days from birth, to date, that the child was reported to be predominantly breastfed).
+#cumpart: Cumulative days of partial breastfeeding (cumulative sum of partrun, ie, number of days from birth, to date, that the child was reported to be partially breastfed).
+#cumnobf: Cumulative days of no breastfeeding (cumulative sum of nobfrun, ie, number of days from birth, to date, that the child was reported to not be breastfed).
+
 d <- d %>% select(pid, agedays, cumexc, cumpred, cumpart, cumnobf) %>% rename(subjido=pid)
 
 

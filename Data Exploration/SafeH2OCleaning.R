@@ -5,7 +5,7 @@
 
 rm(list=ls())
 library("haven")
-library("dplyr")
+library("tidyverse")
 
 
 #Improved water coding rules
@@ -403,12 +403,12 @@ head(dh20)
 
 dh20 <- subset(dh20, select = -c(h2osrc, h2osrcp, h2osrcc))
 
-d <- dh20 %>% 
+dh20 <- dh20 %>% 
   group_by(studyid, country, subjid) %>%
   arrange(agedays) %>%
   slice(1)
 
-table(d$studyid, d$safeh20)
+table(dh20$studyid, dh20$safeh20)
 
 
-save(d, file="U:/data/improved_water_dataset.Rdata")
+save(dh20, file="U:/data/Raw Data Cleaning/improved_water_dataset.Rdata")
