@@ -430,4 +430,11 @@ table(dsan$studyid, dsan$impsan)
 
 head(dsan)
 
+dsan <- dsan %>% subset(., select = -c(agedays, sanitatn, imprlat, subjido))
+
 save(dsan, file="U:/data/Raw Data Cleaning/improved_sanitation_dataset.Rdata")
+
+
+
+
+

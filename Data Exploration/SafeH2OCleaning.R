@@ -411,4 +411,6 @@ dh20 <- dh20 %>%
 table(dh20$studyid, dh20$safeh20)
 
 
+dh20 <- dh20 %>% subset(., select = -c(agedays))
+
 save(dh20, file="U:/data/Raw Data Cleaning/improved_water_dataset.Rdata")

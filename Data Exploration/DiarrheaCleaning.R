@@ -192,7 +192,7 @@ res <-diar_df %>%
 knitr::kable(res, digits=1)
 
 res2 <-diar_df %>% 
-  filter(agedays >= 30.4167*6 & agedays < 30.4167*24) %>% filter(!is.na(diarfl)) %>%
+  filter(agedays < 30.4167*24) %>% filter(!is.na(diarfl)) %>%
   group_by(studyid, subjid) %>%
   summarise(n=n(), prev=mean(diarfl, na.rm=T)) %>% 
   ungroup() %>%
@@ -202,26 +202,26 @@ res2 <-diar_df %>%
 knitr::kable(res2, digits=1)
 
 
-#Drop studies without correct survellance information or with too few measurements 
+#Drop studies without correct survellance information or with too few measurements (<100)
 diar_df <- diar_df %>% 
   #Inaccurate non-case data
   filter(studyid!="ki1000108-CMC-V-BCS-2002" &
                                 studyid!="ki1000108-IRC" &
                                 studyid!="ki1112895-Burkina Faso Zn" &
                                 studyid!="ki1113344-GMS-Nepal" &
-                                studyid!="ki1148112-iLiNS-DYAD-M ") %>%
+                                studyid!="ki1148112-iLiNS-DYAD-M ")# %>%
   #Too few observations
-  filter(studyid!="ki1148112-iLiNS-DOSE " &
-           studyid!="ki1148112-LCNI-5" &
-           studyid!="ki1000125-AgaKhanUniv" &
-           studyid!="ki1000304-EU" &
-           studyid!="ki1148112-iLiNS-DOSE" &
-           studyid!="ki1148112-iLiNS-DYAD-M" &
-           studyid!="ki1000304-VITAMIN-A" &
-           studyid!="ki1000304-ZnMort" &
-           studyid!="ki1000304b-SAS-CompFeed" &
-           studyid!="ki1066203-TanzaniaChild2" &
-           studyid!="ki1126311-ZVITAMBO" )
+  # filter(studyid!="ki1148112-iLiNS-DOSE " &
+  #          studyid!="ki1148112-LCNI-5" &
+  #          studyid!="ki1000125-AgaKhanUniv" &
+  #          studyid!="ki1000304-EU" &
+  #          studyid!="ki1148112-iLiNS-DOSE" &
+  #          studyid!="ki1148112-iLiNS-DYAD-M" &
+  #          studyid!="ki1000304-VITAMIN-A" &
+  #          studyid!="ki1000304-ZnMort" &
+  #          studyid!="ki1000304b-SAS-CompFeed" &
+  #          studyid!="ki1066203-TanzaniaChild2" &
+  #          studyid!="ki1126311-ZVITAMBO" )
 
 
 
@@ -229,27 +229,36 @@ diar_df <- diar_df %>%
 diar_6mo <- diar_df %>% #filter(!is.na(predfeed_fl)) %>% 
   filter(agedays < 30.4167*6) %>%
   group_by(studyid,  subjid) %>%
-  mutate(perdiar6=as.numeric(mean(diarfl, na.rm=T))) %>%
-  slice(1) %>% subset(., select = -c(agedays, diarfl))
+  mutate(n=n(), perdiar6=as.numeric(mean(diarfl, na.rm=T))) %>%
+  ungroup() %>% group_by(studyid) %>% mutate(meanN=mean(n)) %>% filter(meanN >= 100) %>% #Set as NA if less than 100 obs under 6 months
+  ungroup() %>% group_by(studyid,subjid) %>% slice(1) %>% subset(., select = -c(n, meanN, agedays, diarfl))
 summary(diar_6mo$perdiar6)
 
 
-#Summarize 6-24 month  diarrhea
+
+
+#Summarize 0-24 month  diarrhea
 diar_24mo <- diar_df %>% #filter(!is.na(predfeed_fl)) %>% 
-  filter(agedays >= 30.4167*6 & agedays < 30.4167*24) %>%
+  filter(agedays < 30.4167*24) %>%
   group_by(studyid,  subjid) %>%
-  mutate(perdiar24=as.numeric(mean(diarfl, na.rm=T))) %>%
-  slice(1)  %>% subset(., select = -c(agedays, diarfl))
+  mutate(n=n(), perdiar24=as.numeric(mean(diarfl, na.rm=T))) %>%
+  ungroup() %>% group_by(studyid) %>% mutate(meanN=mean(n)) %>% filter(meanN >= 100) %>% #Set as NA if less than 100 obs under 24 months
+  ungroup() %>% group_by(studyid,subjid) %>% slice(1) %>% subset(., select = -c(n, meanN, agedays, diarfl))
 summary(diar_24mo$perdiar24)
 
-head(diar_df)
-diar_df <- left_join(diar_df, diar_6mo, by=c("studyid","subjid"))
+# head(diar_df)
+# diar_df <- left_join(diar_df, diar_6mo, by=c("studyid","subjid"))
+# diar_df <- left_join(diar_df, diar_24mo, by=c("studyid","subjid"))
 
-diar_df <- left_join(diar_df, diar_24mo, by=c("studyid","subjid"))
+diar <- merge(diar_6mo, diar_24mo, by=c("studyid","subjid"), all.x = T, all.y = T)
 
-save(diar_df, file="U:/data/Raw Data Cleaning/rawdiar_df.Rdata")
+save(diar, file="U:/data/Raw Data Cleaning/rawdiar_df.Rdata")
 
+table(diar$studyid)
+summary(diar$perdiar6)
+summary(diar_6mo$perdiar6)
 
+summary(diar$perdiar24)
 
 
 

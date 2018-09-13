@@ -301,7 +301,16 @@ d<-readRDS(paste0("U:/data/",study,".rds")) %>% group_by(SUBJID) %>% arrange(AGE
 
 cat(paste(shQuote(colnames(d), type="cmd"), collapse=", "))
 varlist<-colnames(d)[colnames(d) %in% c( "AGLAND", "BICYCLE", "ELEC", "FAN", "FRIG", "INCTOT", "MOBILE", "NROOMS", "RADIO", "TV", "WATCH", "CHAIR", "COMPUTER","MATTRESS", "SOFA", "TABLE", "BOOKS")]
-d<-assetPCA(d, varlist, reorder=F)
+
+d1<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[1],], varlist, reorder=T)
+#d2<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[2],], varlist, reorder=T) #Not enough variables
+d3<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[3],], varlist, reorder=T)
+d4<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[4],], varlist, reorder=F)
+d5<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[5],], varlist, reorder=F)
+d6<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[6],], varlist, reorder=F)
+d7<- assetPCA(d[d$COUNTRY==unique(d$COUNTRY)[7],], varlist, reorder=F)
+
+d<-rbind(d1,d3,d4,d5,d6,d7)
 saveRDS(d, file=paste0(study, '.HHwealth.rds') )
 
 #---------
