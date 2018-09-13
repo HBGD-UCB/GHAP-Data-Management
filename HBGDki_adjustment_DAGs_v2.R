@@ -1,36 +1,3 @@
----
-title: "HBGDki adjustment DAGs"
-author: "Andrew Mertens"
-date: "July 10, 2018"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
-# A single DAG for all risk factors involves making too many assumptions about the direction of covariate relationship, so we create a DAG per risk factor. For example, does low maternal education lead to lower household wealth, or does household wealth lead to lower maternal education opportunities? When analyzing the association between maternal education and stunting, we assume household wealth is a confounder rather than on the causal path, and adjust for it, and vice versa. However, even when elimating all bi-directional edges for each DAG, making sure that only the variables that are clearly on the causal pathway are not controlled for, the DAGs are complicated and sometimes un-identifiable. In these cases, all direct parents of the risk factor and outcome are chosen as the adjustment set.
-# 
-# Can you check behind me and make sure A) I'm not including any variables on the causal pathway in the adjustment set for each risk factor, and B) I'm nt excluding any important confounders from each adjustment set?
-# 
-# There are three parts to this document. 1) a table of the variable name codes and a description of each variable. 2) A list of each risk factor and the corresponding adjustment set, and 3) a DAG for each risk factor, with the title noting either the adjustment set for estimating the risk factor - stunting association, or marked as non-identifiable if there is no way to block the backdoor paths. At this point, I haven't figured out an easy way to identify the backdoor paths using the daggity R package in these complex DAGs, so I choose all parents of the risk factor as the adjustment set.
-
-```
-
-
-## DAGs specific to each risk factor
-
-A single DAG for all risk factors involves making too many assumptions about the direction of covariate relationship, so we create a DAG per risk factor. For example, does low maternal education lead to lower household wealth, or does household wealth lead to lower maternal education opportunities? When analyzing the association between maternal education and stunting, we assume household wealth is a confounder rather than on the causal path, and adjust for it, and vice versa. However, even when elimating all bi-directional edges for each DAG, making sure that only the variables that are clearly on the causal pathway are not controlled for, the DAGs are complicated and sometimes un-identifiable. In these cases, all direct parents of the risk factor and outcome are chosen as the adjustment set.
-
-There are three parts to this document. 1) a table of the variable name codes and a description of each variable. 2) A list of each risk factor and the corresponding adjustment set, and 3) a DAG for each risk factor, with the title noting either the adjustment set for estimating the risk factor - stunting association, or marked as non-identifiable if there is no way to block the backdoor paths. At this point, I haven't figured out an easy way to identify the backdoor paths using the daggity R package in these complex DAGs, so I choose all parents of the risk factor as the adjustment set.
-
-
-
-
-## List of adjustment covariates for each risk factor
-
-
-
-```{r, include=F}
 
 
 library(dagitty)
@@ -38,6 +5,7 @@ library(lavaan)
 library(ggdag)
 library(stringr)
 library(knitr)
+
 
 
 
@@ -58,15 +26,11 @@ var_labels = c("Child gender", "Month of measurement", "Mother's age",   "Father
 "Number of children <5 in house", "Number of people in house", "Number of rooms in house",
 "Improved sanitation",  "Safe water source",   "Treats drinking water",  "Clean cooking fuel",  
 "Improved floor", "Enrolled stunted","Exclusive or predominant breastfeeding under 6 months", "Percent days with diarrhea")
-```
-
-```{r, echo=F}
-
-knitr::kable(data.frame(Variable_Name=all_exposures, Description=var_labels))
-```
 
 
-```{r, include=F}
+
+knitr::kable(data.frame(variable_name=all_exposures, description=var_labels))
+
 
 
 d <-paste0("dag {",
@@ -1245,8 +1209,9 @@ RF_DAG <- function(d, Avar, all_exposures = c("sex", "month", "mage",   "fage", 
                 adj_set <- gsub("c\\(","",adj_set)
                 adj_set <- gsub(")","",adj_set)
                 adj_set <- str_split(adj_set, ",")[[1]]
+
             }
-      cat("Adjustment set: \n", adj_set ,"\n\n")
+      print( adj_set )
       
       print(ggdag_adjustment_set(g2))
       
@@ -1267,30 +1232,4 @@ save(adj_set_list, file="C:/Users/andre/Dropbox/HBGDki documentation/HBGDki_adj_
 
 
 
-
-
-
-```
-
-
-
-```{r}
-print(adj_set_list)
-
-```
-
-
-
-
-```{r, results="asis", echo = FALSE}
-
-adj_set_list <- list()
-for(i in 1:length(all_exposures)){
-  cat("\n\n## Risk Factor: ", all_exposures[i], "\n")
-
-  adj_set_list[[i]] <- RF_DAG(d, Avar = all_exposures[i])
-}
-
-
-```
 
