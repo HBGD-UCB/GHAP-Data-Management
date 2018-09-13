@@ -1,7 +1,7 @@
 
-
+rm(list=ls())
 library("haven")
-library("dplyr")
+library("tidyverse")
 
 
 #Improved sanitation coding rules
@@ -49,6 +49,8 @@ df<-load_san("U:/data/mled.rds")
 #Load SES data
 d <- read.csv("U:/data/MALED-201501/import/WAMI_to24.csv")
 head(d)
+
+d <- d %>% group_by(PID, Country_ID) %>% arrange(agedays) %>% slice(1) %>% ungroup()
 
 #Coding
 # "No facility/bush/field or bucket toilet = 01;Pit latrine without flush = 02;
@@ -286,7 +288,8 @@ dsan<-bind_rows(dsan, d)
 # ki1135781-COHORTS          
 #-------------------------------
 
-d<-load_san("U:/data/cort.rds")
+df<-load_san("U:/data/cort.rds")
+df <- df %>% subset(., select =c(subjid,studyid,subjido, country)) %>% group_by(subjido) %>% slice(1)
 #Check raw data to find sanitation variable
 
 
@@ -307,7 +310,14 @@ d$impsan[d$c3toilet==0] <- 0
 d$impsan[d$c3toilet==1 & d$delhi==1] <- 0
 table(d$impsan)
 
-dsan<-bind_rows(dsan, d)
+d <- d %>% filter(!is.na(impsan)) %>% subset(., select = c(newid, impsan) ) %>% rename(subjido=newid)
+
+d$subjido <- as.character(d$subjido)
+df <- left_join(df, d, by = c("subjido"))
+table(d$impsan)
+table(df$impsan)
+
+dsan<-bind_rows(dsan, df)
 
 
 #-------------------------------
@@ -420,4 +430,4 @@ table(dsan$studyid, dsan$impsan)
 
 head(dsan)
 
-save(dsan, file="U:/data/improved_sanitation_dataset.Rdata")
+save(dsan, file="U:/data/Raw Data Cleaning/improved_sanitation_dataset.Rdata")
