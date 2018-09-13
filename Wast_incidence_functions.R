@@ -7,36 +7,73 @@ library(zoo)
 
 
 #Mock data
-# set.seed(12345)
+set.seed(12345)
 # AGEDAYS<-c(1,31,70, 100, 200, 210,220,270,300,
 #            5,20,50,100,130,
 #            7,14,21,28,45)
-# AGEDAYS<-rep(sample.int(720, 60),50)
+AGEDAYS<-rep(1:60*61,50)
 # SUBJID<-c(1,1,1,1,1, 1,1,1,1,
 #           2,2,2,2,2,
 #           3,3,3,3,3)
-# SUBJID<-rep(1:50, each = 60)
+SUBJID<-rep(1:50, each = 60)
 # WHZ<-c(0,-3.5,0,-3.5,0,0,0,-3.5,0,
 #        -2.5,-2.5,-2.5,-2.5,-2.5,
 #        -2.5,0,-2.5,0,0)
-# WHZ<-rnorm(3000,-2,1)
-# d<-data.frame(SUBJID,AGEDAYS,WHZ)
-# d<-d %>% arrange(SUBJID,AGEDAYS)
-# 
-# 
-# agecats=c(6*30, 12*30, 18*30, 24*30)
-#   d$agecat <- as.factor(findInterval(d$AGEDAYS, agecats, rightmost.closed=F))
-# table(d$agecat)
-# strat=T
-# agecats=c(6*30, 12*30, 18*30, 24*30)
-# agecat_rownames=NULL
-# washout=60
-# 
-# test<- WastIncCalc(d,washout=60)
-# test2<-WastIncTable(test,
-#                     strat=T,
-# agecats=c(6*30, 12*30, 18*30, 24*30),
-# agecat_rownames=NULL)
+WHZ<-rnorm(3000,-1.5,1)
+d<-data.frame(SUBJID,AGEDAYS,WHZ)
+d<-d %>% arrange(SUBJID,AGEDAYS)
+colnames(d) <- tolower(colnames(d))
+save(d, file="c:/Users/andre/Dropbox/HBGDki replication/Mock data/testdata.Rdata")
+
+
+
+rm(list=ls())
+library(tidyverse)
+library(zoo)
+
+
+
+#Mock data
+set.seed(12345)
+# AGEDAYS<-c(1,31,70, 100, 200, 210,220,270,300,
+#            5,20,50,100,130,
+#            7,14,21,28,45)
+AGEDAYS<-rep(sample.int(720, 60),50)
+# SUBJID<-c(1,1,1,1,1, 1,1,1,1,
+#           2,2,2,2,2,
+#           3,3,3,3,3)
+SUBJID<-rep(1:50, each = 60)
+# WHZ<-c(0,-3.5,0,-3.5,0,0,0,-3.5,0,
+#        -2.5,-2.5,-2.5,-2.5,-2.5,
+#        -2.5,0,-2.5,0,0)
+WHZ<-rnorm(3000,-1.5,1)
+d<-data.frame(SUBJID,AGEDAYS,WHZ)
+d<-d %>% arrange(SUBJID,AGEDAYS)
+colnames(d) <- tolower(colnames(d))
+save(d, file="c:/Users/andre/Dropbox/HBGDki replication/Mock data/testdata.Rdata")
+
+
+#Mock data 2 - 60 days between all obs and alternative wasitng so wastinc should equal wast
+set.seed(12345)
+AGEDAYS<-rep(1:60*61,50)
+SUBJID<-rep(1:50, each = 60)
+WHZ<-rep(rep(c(-1.5, -2.5), 25), 60)
+d<-data.frame(SUBJID,AGEDAYS,WHZ)
+d<-d %>% arrange(SUBJID,AGEDAYS)
+colnames(d) <- tolower(colnames(d))
+save(d, file="c:/Users/andre/Dropbox/HBGDki replication/Mock data/testdata2.Rdata")
+
+
+#Mock data 3 - all obs wasted so wastinc should equal # subjids
+set.seed(12345)
+AGEDAYS<-rep(1:60*61,50)
+SUBJID<-rep(1:50, each = 60)
+WHZ<-rep(-2.5, 3000)
+d<-data.frame(SUBJID,AGEDAYS,WHZ)
+d<-d %>% arrange(SUBJID,AGEDAYS)
+colnames(d) <- tolower(colnames(d))
+save(d, file="c:/Users/andre/Dropbox/HBGDki replication/Mock data/testdata3.Rdata")
+
 
 
 
