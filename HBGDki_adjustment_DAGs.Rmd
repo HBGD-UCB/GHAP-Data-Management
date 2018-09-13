@@ -7,14 +7,19 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# A single DAG for all risk factors involves making too many assumptions about the direction of covariate relationship, so we create a DAG per risk factor. For example, does low maternal education lead to lower household wealth, or does household wealth lead to lower maternal education opportunities? When analyzing the association between maternal education and stunting, we assume household wealth is a confounder rather than on the causal path, and adjust for it, and vice versa. However, even when elimating all bi-directional edges for each DAG, making sure that only the variables that are clearly on the causal pathway are not controlled for, the DAGs are complicated and sometimes un-identifiable. In these cases, all direct parents of the risk factor and outcome are chosen as the adjustment set.
+# 
+# Can you check behind me and make sure A) I'm not including any variables on the causal pathway in the adjustment set for each risk factor, and B) I'm nt excluding any important confounders from each adjustment set?
+# 
+# There are three parts to this document. 1) a table of the variable name codes and a description of each variable. 2) A list of each risk factor and the corresponding adjustment set, and 3) a DAG for each risk factor, with the title noting either the adjustment set for estimating the risk factor - stunting association, or marked as non-identifiable if there is no way to block the backdoor paths. At this point, I haven't figured out an easy way to identify the backdoor paths using the daggity R package in these complex DAGs, so I choose all parents of the risk factor as the adjustment set.
+
 ```
 
 
 ## DAGs specific to each risk factor
 
 A single DAG for all risk factors involves making too many assumptions about the direction of covariate relationship, so we create a DAG per risk factor. For example, does low maternal education lead to lower household wealth, or does household wealth lead to lower maternal education opportunities? When analyzing the association between maternal education and stunting, we assume household wealth is a confounder rather than on the causal path, and adjust for it, and vice versa. However, even when elimating all bi-directional edges for each DAG, making sure that only the variables that are clearly on the causal pathway are not controlled for, the DAGs are complicated and sometimes un-identifiable. In these cases, all direct parents of the risk factor and outcome are chosen as the adjustment set.
-
-Can you check behind me and make sure A) I'm not including any variables on the causal pathway in the adjustment set for each risk factor, and B) I'm nt excluding any important confounders from each adjustment set?
 
 There are three parts to this document. 1) a table of the variable name codes and a description of each variable. 2) A list of each risk factor and the corresponding adjustment set, and 3) a DAG for each risk factor, with the title noting either the adjustment set for estimating the risk factor - stunting association, or marked as non-identifiable if there is no way to block the backdoor paths. At this point, I haven't figured out an easy way to identify the backdoor paths using the daggity R package in these complex DAGs, so I choose all parents of the risk factor as the adjustment set.
 
