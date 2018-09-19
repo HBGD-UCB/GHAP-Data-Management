@@ -63,14 +63,13 @@ d <- d %>% filter(measurefreq!="yearly")
 
 
 #Vector of risk factor names
-A<-c( "studyid", "sex",              "gagebrth",      "birthwt",      
-      "birthlen",      "enstunt",       "vagbrth",       "hdlvry",        "mage",          "mhtcm",         "mwtkg",        
-      "mbmi",          "single",        "fage",          "fhtcm",         "nrooms",        "nhh",           "nchldlt5",     
-      "hhwealth_quart", "month", "brthmon", "parity",   "meducyrs", 
-      "feducyrs", "hfoodsec",  
-      "enwast", "anywast06", "pers_wast", 
-      "trth2o", "cleanck", "impfloor",  "impsan", "safeh20",
-      "perdiar6", "perdiar24", "predexfd6", "earlybf")  
+A<-c( "studyid", "sex", "gagebrth",      "birthwt",       "birthlen",      "enwast",        "vagbrth",       "hdlvry",        "mage",          "fage",          "mhtcm",        
+  "mwtkg",         "mbmi",          "single",        "fhtcm",         "nrooms",        "nhh",           "nchldlt5",      "hhwealth_quart","parity",       
+  "meducyrs",      "feducyrs",      "hfoodsec",      "trth2o",        "cleanck",       "impfloor",      "impsan",        "safeh20",       "perdiar6",     
+  "perdiar24",     "predfeed3",     "predfeed6",     "predfeed36",    "exclfeed3",     "exclfeed6",     "exclfeed36",    "predexfd6",     "earlybf",
+  "enstunt", "brthmon", "month", "anywast06", "pers_wast")   
+
+
 
 d <- d %>% select(A)
 
@@ -106,18 +105,23 @@ for(i in 2:ncol(df)){
 write.csv(df, file="U:/results/diagnostic figures/covariate_presence.csv")
 
 
-
-
-#------------------------------------------
-# Plot out covariate presence
-#------------------------------------------
-
 library(reshape2)
 plotdf <- melt(df, id.vars = c("studyid"))
 head(plotdf)
 
 #Merge in the number of observations
 plotdf <- left_join(plotdf, nObs, by=c("studyid", "variable"))
+
+save(plotdf, file="U:/results/diagnostic figures/covariate_presence.Rdata")
+
+
+
+
+#------------------------------------------
+# Plot out covariate presence
+#------------------------------------------
+
+
 
 #Categorize N's
 summary(plotdf$N)
