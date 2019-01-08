@@ -67,7 +67,7 @@ load("U:/data/Raw Data Cleaning/improved_water_dataset.Rdata")
 
 
 
-head(bf_6mo)
+head(bf)
 head(diar)
 head(dh20)
 head(dsan)
@@ -139,6 +139,12 @@ for(i in 3:ncol(d)){
 }
 d$id <- as.numeric(d$id)
 
+#drop duplicated Jivita covariates
+dim(d)
+d <- distinct(d, .keep_all=T )
+dim(d)
+
+#Save dataset
 saveRDS(d, "FINAL_clean_covariates.rds")
 
 

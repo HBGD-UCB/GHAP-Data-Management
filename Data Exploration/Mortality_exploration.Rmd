@@ -1,0 +1,55 @@
+---
+title: "Mortality Exploration"
+author: "Andrew Mertens"
+date: "October 30, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+theme_set(theme_bw())
+d <- readRDS("U:/UCB-SuperLearner/Stunting rallies/mortality.rds")
+
+d$dead2 <- d$dead
+d$dead2[is.na(d$dead)] <-0
+d$cohort <- paste0(d$studyid," ", d$country)
+
+
+
+```
+
+## Number of recorded child death by cohort (on cleaned GHAP data)
+
+
+```{r, echo=F}
+#Mortality information by study
+knitr::kable(table(d$cohort, d$dead2))
+```
+
+Note that many studies that recorded mortality (WASH Benefits) don't have mortality data on the GHAP platfrorm (or its there in the raw data but not the harmonized datasets).
+
+
+## Distribution of age of death
+
+```{r, echo=F, message=F, warning=F}
+summary(d$agedth)
+ggplot(d, aes(x=agedth)) + geom_histogram() + xlim(c(0, 720)) + ylim(c(0,300))
+```
+
+Many deaths are soon after birth, but 30% come after 6 months and 43% come after 3 months.
+
+## Distribution of age of death by cohort
+
+```{r, echo=F, message=F, warning=F}
+ggplot(d[!is.na(d$dead),], aes(x=agedth)) + geom_histogram() + xlim(c(0, 720)) + ylim(c(0,100)) + facet_wrap(~cohort)
+```
+
+
+Most mortality info is from ZVitambo or Jivita-3.
+
+
+
+404 of 3822 don't have a specific age of death recorded (but we could grab the last age of anthropometry measurements to get a lower bound). 1355 have a cause of death (mostly from ZVitambo).

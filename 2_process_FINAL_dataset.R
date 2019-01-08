@@ -625,7 +625,10 @@ d$W_parity <- d$parity
 d$gagebrth <- quantile_rf(d, d$W_gagebrth, Acuts=c(0,260,274,max(d$W_gagebrth, na.rm=T)), labs=c("Preterm", "Early term", "Full or late term"))
 d$birthwt <- quantile_rf(d, d$W_birthwt, Acuts=c(0,2500,max(d$W_birthwt, na.rm=T)), labs=c("Low birth weight", "Normal or high birthweight"))
 d$birthlen <- quantile_rf(d, d$W_birthlen, Acuts=c(0,48, 50, max(d$W_birthlen, na.rm=T)), units="cm")
-d$mage <- quantile_rf(d, d$W_mage, Acuts=c(0,25,30,max(d$W_mage, na.rm=T)))
+
+d$W_mage[d$studyid=="ki1112895-Burkina Faso Zn"] <- d$W_mage[d$studyid=="ki1112895-Burkina Faso Zn"] -1 # Fix Ages in Burkino Faso Zinc, which are the upper limit of age ranges
+d$mage <- quantile_rf(d, d$W_mage, Acuts=c(0,20,30,max(d$W_mage, na.rm=T)))
+
 d$mhtcm <- quantile_rf(d, d$W_mhtcm, Acuts=c(0,151,155,max(d$W_mhtcm, na.rm=T)), units="cm")
 d$mwtkg <- quantile_rf(d, d$W_mwtkg, Acuts=c(0,52,58,max(d$W_mwtkg, na.rm=T)), units="kg")
 d$mbmi <- quantile_rf(d, d$W_mbmi, Acuts=c(0,18.5,25,max(d$W_mbmi, na.rm=T)), labs=c("Underweight", "Normal weight", "Overweight or Obese"))
@@ -823,6 +826,10 @@ d$mwtkg <- relevel(d$mwtkg, ref=">=58 kg")
 #lowest education level = baseline
 d$meducyrs <- relevel(factor(d$meducyrs), ref="Low")
 d$feducyrs <- relevel(factor(d$feducyrs), ref="Low")
+
+#mother's age
+#middle = baseline
+d$mage <- relevel(d$mage, ref="[20-30)")
 
 #father age
 #oldest = baseline
