@@ -835,9 +835,15 @@ d$mage <- relevel(d$mage, ref="[20-30)")
 #oldest = baseline
 d$fage <- relevel(d$fage, ref=">=38")
 
-#father height?
+#father height
 d$fhtcm <- relevel(d$fhtcm, ref=">=167 cm")
 
+#parental education
+d$meducyrs <- relevel(d$meducyrs, ref="High")
+d$feducyrs <- relevel(d$feducyrs, ref="High")
+
+#number of rooms
+d$nrooms <- relevel(d$nrooms, ref="4+")
 
 
 
