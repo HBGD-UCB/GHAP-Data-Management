@@ -114,7 +114,7 @@ for(i in 1:nrow(df)){
       d<-d[d$HAZ < 6 & d$HAZ > (-6),]
       
       #Subset to ages 0-24months
-      d<-d[d$AGEDAYS>=0 & d$AGEDAYS < 24*30.25,]
+      d<-d[d$AGEDAYS>=0 & d$AGEDAYS < 24*30.4167,]
       
       stuntprev<- mean(as.numeric(d$HAZ < (-2)), na.rm=T)*100
       
@@ -143,11 +143,11 @@ for(i in 1:nrow(df)){
       #Calculate min and max age
       firstage <- d %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% filter(AGEDAYS==first(AGEDAYS)) %>% 
         ungroup() %>% summarize(firstage=median(AGEDAYS, na.rm=T))
-      firstage <- round(firstage/30.41)
+      firstage <- round(firstage/30.4167)
       
       lastage <- d %>% group_by(SUBJID) %>% arrange(AGEDAYS) %>% filter(AGEDAYS==last(AGEDAYS)) %>% 
         ungroup() %>% summarize(lastage=median(AGEDAYS, na.rm=T))
-      lastage <- round(lastage/30.41)
+      lastage <- round(lastage/30.4167)
       
       mortality<-as.numeric("DEAD" %in% colnames(d))
       birthweek<-as.numeric("BRTHWEEK" %in% colnames(d))   
@@ -181,9 +181,9 @@ for(i in 1:nrow(df)){
       
       #Calculate monthly stunting
       for(j in 0:23){
-        assign(paste('meanHAZ_m', j+1, sep=''),  mean(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30], na.rm=T))
-        assign(paste('stuntprev_m', j+1, sep=''),  mean(as.numeric(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30] < (-2)), na.rm=T)*100)
-        assign(paste('n', j+1, sep=''),  length(d$HAZ[d$AGEDAYS>=j*30 & d$AGEDAYS<(j+1)*30]))
+        assign(paste('meanHAZ_m', j+1, sep=''),  mean(d$HAZ[d$AGEDAYS>=j*30.4167 & d$AGEDAYS<(j+1)*30.4167], na.rm=T))
+        assign(paste('stuntprev_m', j+1, sep=''),  mean(as.numeric(d$HAZ[d$AGEDAYS>=j*30.4167 & d$AGEDAYS<(j+1)*30.4167] < (-2)), na.rm=T)*100)
+        assign(paste('n', j+1, sep=''),  length(d$HAZ[d$AGEDAYS>=j*30.4167 & d$AGEDAYS<(j+1)*30.4167]))
       }
       
       

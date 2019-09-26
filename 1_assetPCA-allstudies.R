@@ -77,17 +77,9 @@ assetPCA<-function(dfull, varlist, reorder=F ){
   }
   table(is.na(ret))
   
-  #Remove columns with almost no variance
-  if(length(nearZeroVar(ret))>0){
-    ret<-ret[,-nearZeroVar(ret)]
-  }
-  
   #Convert factors into indicators
   ret<-droplevels(ret)
   ret<-design_matrix(ret)
-  if(length(nearZeroVar(ret))>0){
-    ret<-ret[,-nearZeroVar(ret)]
-  }
   
   
   #Set missingness to zero

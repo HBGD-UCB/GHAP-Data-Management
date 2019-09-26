@@ -147,7 +147,7 @@ d <- d %>% subset(., select=-c(measurefreq))
 
 #--------------------------------------------------------
 #Calculate stunting and wastingat enrollment and keep one observation per child
-#Also check if children without a recorded birthweight or birthlength have WAZ or HAZ in the first year of life
+#Also check if children without a recorded birthweight or birthlength have WAZ or HAZ in the first day of life
 #--------------------------------------------------------
 d <- d %>% group_by(studyid, subjid) %>% 
   arrange(studyid, subjid, agedays) %>% 
